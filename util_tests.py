@@ -35,6 +35,3 @@ class testUtil(unittest.TestCase):
         #
         # Unconditionally fail, for example in a try block that should raise
         # self.fail('Exception was not raised')
-
-unittest.main()
-
