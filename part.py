@@ -65,4 +65,14 @@ class ImagePart(object):
         self.matrix = copy.deepcopy(image)
 
     def addBorder(self):
-        pass #TODO
+        width = 1 # can change later
+        color = (255,255,255)
+        for x in range(width):
+            for y in range(self.h):
+                self.matrix[x][y] = color
+                self.matrix[self.w-width][y] = color
+
+        for y in range(width):
+            for x in range(self.w):
+                self.matrix[x][y] = color
+                self.matrix[x][self.h-width] = color
