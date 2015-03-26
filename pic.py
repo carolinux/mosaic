@@ -29,10 +29,13 @@ def comparisons(directory, main_pic):
     print comps
     main_part = ImagePart.from_whole_image(main_pic)
     parts = divide_into_parts(main_pic, 10,10)
-    new_pic = assemble_from_parts(parts, border=True)
-    plt.imshow(new_pic)
-    plt.show()
-    pics = map(lambda x: read(x), comps)
-
+#    new_pic = assemble_from_parts(parts, border=True)
+#    plt.imshow(new_pic)
+#    plt.show()
+    pics = map(lambda x: read(x), comps[:10])
+    part = parts[3][5] # just a random part
+    for pic in pics:
+        part.compareWithImage(pic, show=True)
+    
 if __name__=="__main__":
     comparisons("/home/carolinux/Pictures","/home/carolinux/Documents/luigi.jpg")

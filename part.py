@@ -1,6 +1,9 @@
 import copy
 import numpy as np
 from skimage.transform import resize 
+import skimage.io as io
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 class ImagePart(object):
     """A class that represents part of an image"""
@@ -54,11 +57,24 @@ class ImagePart(object):
             origin = self.ll
         return tuple(self.matrix[x-origin[0]][y-origin[1]])
 
-    def compareWithImage(self, image):
+    def compareWithImage(self, image, show=False):
         """ See if an image matches the dominant colors etc of this particular part nicely"""
         # first resize image to fit:
         image = resize(image, (self.w,self.h),mode='nearest')
-        #TODO :more
+        this_image = self.toImage()
+        # show side by side
+        if show:
+            fig = plt.figure()
+            a=fig.add_subplot(1,2,1)
+            imgplot = plt.imshow(this_image)
+            a.set_title('Base')
+            plt.colorbar(ticks=[0.1,0.3,0.5,0.7], orientation ='horizontal')
+            a=fig.add_subplot(1,2,2)
+            imgplot = plt.imshow(image)
+            imgplot.set_clim(0.0,0.7)
+            a.set_title('Comparison')
+            plt.colorbar(ticks=[0.1,0.3,0.5,0.7], orientation='horizontal')
+            plt.show()
         return image
 
     def fillWithImage(self, image):
