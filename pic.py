@@ -32,10 +32,10 @@ def comparisons(directory, main_pic):
 #    new_pic = assemble_from_parts(parts, border=True)
 #    plt.imshow(new_pic)
 #    plt.show()
-    pics = map(lambda x: read(x), comps[:10])
+    pics = map(lambda x: read(x), comps[:3])
     part = parts[3][5] # just a random part
     for pic in pics:
         part.compareWithImage(pic, show=True)
     
 if __name__=="__main__":
-    comparisons("/home/carolinux/Pictures","/home/carolinux/Documents/luigi.jpg")
+    comparisons("./pictures","/home/carolinux/Documents/luigi.jpg")

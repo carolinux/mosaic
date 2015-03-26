@@ -7,7 +7,7 @@ from part import ImagePart
 
 def get_all_pictures_in_directory(directory_path,recursive=False, extensions=None):
     if extensions is None:
-        extensions = [".jpg",".png"]
+        extensions = [".jpg",".png",".jpeg"]
     picture_fns = []
     for filename in os.listdir(directory_path):
         full_path = os.path.join(directory_path,filename)
