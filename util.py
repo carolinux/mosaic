@@ -3,6 +3,8 @@ import math
 import itertools
 import os
 
+import skimage.io as io
+
 from part import ImagePart
 
 def get_all_pictures_in_directory(directory_path,recursive=False, extensions=None):
@@ -41,18 +43,24 @@ def tile_one_part(img, parts):
             c = parts[16].get_color(*px, origin=origin)
             img[px]=c
 
+def divide_into_tiles(img,tile=(10,10)):
+    width_x, width_y = tile
+    parts = []
+    num = 0
+    for i in range(0,img.shape[0],width_x):
+        parts.append([])
+        for j in range(0,img.shape[1],width_y):
+            parts[-1].append(ImagePart.from_image(img,width_x, width_y, origin=(i,j), number=num))
+            num+=1
+    return parts
+
 def divide_into_parts(img, numXtiles, numYtiles):
     """Divide the image equally int X*Y parts"""
     width_x = int(math.ceil(img.shape[0]*1.0/numXtiles))
     width_y = int(math.ceil(img.shape[1]*1.0/numYtiles))
-    parts = []
-    for i in range(0,img.shape[0],width_x):
-        parts.append([])
-        for j in range(0,img.shape[1],width_y):
-            parts[-1].append(ImagePart.from_image(img,width_x, width_y, origin=(i,j)))
-    return parts
+    return divide_into_tiles(img,(width_x, width_y))
 
-def assemble_from_parts(parts, border=False):
+def assemble_from_parts(parts, border=False, text=False):
     """Assemble an image from image parts,
     optionally with a border around the tiles"""
     h = sum([p.h for p in parts[0]])
@@ -61,6 +69,29 @@ def assemble_from_parts(parts, border=False):
     img = np.zeros((w,h,3))
     flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
     for i,part in enumerate(flat_parts):
+        if text:
+            part.addText()
+        if border:
+            part.addBorder()
+        pixels = part.get_all_pixels()
+        origin = part.get_origin()
+        for px in pixels:
+            c = part.get_color(*px, origin=origin)
+            #import ipdb;ipdb.set_trace()
+            img[px]=list(c)
+    return img
+
+def assemble_from_parts_luigi_test(parts, border=False, text=False):
+    """Assemble an image from image parts,
+    optionally with a border around the tiles"""
+    h = sum([p.h for p in parts[0]])
+    w = sum([p.w for p in np.transpose(parts)[0]])
+    #import ipdb;ipdb.set_trace()
+    img = np.zeros((w,h,3))
+    flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
+    for i,part in enumerate(flat_parts):
+        if part.number in range(6):
+            part.fillWithImage(io.imread("./pictures/plate.jpeg"))
         if border:
             part.addBorder()
         pixels = part.get_all_pixels()

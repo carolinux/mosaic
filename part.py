@@ -3,7 +3,7 @@ import numpy as np
 from skimage import color
 from skimage import filter
 from skimage import img_as_float
-from skimage import img_as_int
+from skimage import img_as_uint
 from skimage.transform import resize 
 from skimage import measure
 import skimage.io as io
@@ -17,9 +17,11 @@ class ImagePart(object):
     ll = None # lower left point - origin
     w = None
     h = None
-    def __init__(self, matrix, ll):
+    number=0 # the number of the part going right and then up from lower left
+    def __init__(self, matrix, ll, number):
         self.w =len(matrix)
         self.h=len(matrix[0])
+        self.number = number
         self.ll =ll
         self.matrix = matrix
         self.original_matrix = copy.deepcopy(matrix)
@@ -30,11 +32,12 @@ class ImagePart(object):
     @staticmethod
     def from_whole_image(img):
         """Create an image part out of a whole image"""
-        matrix = img
-        return ImagePart(matrix, (0,0))
+        #import ipdb;ipdb.set_trace()
+        matrix = img_as_float(img)
+        return ImagePart(matrix, (0,0), 0)
 
     @staticmethod
-    def from_image(img, w, h, origin=(0,0)):
+    def from_image(img, w, h, origin=(0,0), number=0):
         """Create an image part out of part of an image"""
         matrix = img
         maxw = len(matrix)
@@ -42,7 +45,8 @@ class ImagePart(object):
         (i,j) = origin
         matrix_part = matrix[i:(i+w if i+w<maxw else maxw),j:(j+h if j+h<maxh else maxh)]
 
-        return ImagePart(matrix_part, origin)
+        matrix_part = img_as_float(matrix_part)
+        return ImagePart(matrix_part, origin, number)
 
     def get_matrix(self):
          return self.matrix
@@ -67,7 +71,7 @@ class ImagePart(object):
         # first resize image to fit:
         image = resize(image, (self.w,self.h),mode='nearest')
         this_image = self.toImage()
-        image = img_as_int(image)
+        image = img_as_float(image)
         image = filter.gaussian_filter(image, 3) # TODO to calculate a good blur value
         #image = filter.sobel(image)
         gray = image.sum(-1)
@@ -110,7 +114,12 @@ class ImagePart(object):
         return image
 
     def fillWithImage(self, image):
+        image = resize(image, (self.w,self.h),mode='nearest')
         self.matrix = copy.deepcopy(image)
+
+    def addText(self):
+        import text_util as txt
+        self.matrix = txt.drawTextOnImage(str(self.number), copy.deepcopy(self.matrix))
 
     def addBorder(self): # TODO image as float? color (1,1,1) ?
         width = 1 # can change later
