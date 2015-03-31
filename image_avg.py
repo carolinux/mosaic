@@ -4,7 +4,7 @@ import graph_util as gu
 from matplotlib import pyplot as plt
 
 # TODO : Find good average colors per image
-# and show them
+# and show them (average color and color variance, maybe blurring)
 
 
 pic = io.imread(sys.argv[1])

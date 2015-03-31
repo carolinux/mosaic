@@ -2,7 +2,18 @@
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
+import math
+from skimage.color import rgb2lab
 
+def delta(c1,c2):
+    """euclidean distance of color1 tuple to color2 tuple
+    If they are in CIELAB format, then this is a good measure
+    for perception difference between colors"""
+    
+    return math.sqrt((c1[0]-c2[0])**2 + (c1[1]-c2[1])**2 + (c1[2]-c2[2])**2)
+
+def to_cielab(img):
+    return rgb2lab(img)
 
 def get_colors_as_int64(d):
     f = (d[:,:,0].astype(np.int64)<<16) + (d[:,:,1].astype(np.int64)<<8) + d[:,:,2]
