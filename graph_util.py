@@ -5,6 +5,7 @@ import matplotlib.image as mpimg
 import numpy as np
 import math
 from skimage.color import rgb2lab,lab2rgb
+from skimage.color import deltaE_ciede2000 as deltalab
 
 def delta(c1,c2):
     """euclidean distance of color1 tuple to color2 tuple
@@ -14,10 +15,17 @@ def delta(c1,c2):
     return math.sqrt((c1[0]-c2[0])**2 + (c1[1]-c2[1])**2 + (c1[2]-c2[2])**2)
 
 def rgb_colors_are_similar(c1,c2):
-    d = delta(c1,c2)
-    print d
-    return d<50
+    lab1 = rgb_color_to_lab(*c1)
+    lab2 = rgb_color_to_lab(*c2)
+    d = deltalab(lab1,lab2)
+    #print d
+    return d<10
 
+#TODO: Does it have a clear dominant color
+def is_suitable_for_mosaic(pic):
+    return True
+
+#TODO: Blur first
 def get_average_color(pic):
     # may not be rgb, depending on color space of picture
     r = np.average(pic[:,:,0])

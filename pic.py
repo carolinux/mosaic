@@ -9,22 +9,31 @@ from util import *
 import graph_util as gu
 
 def read(fn):
-    print fn
+    #print fn
     return skimage.img_as_ubyte(io.imread(fn))
 
 def compare(fns, parts):
     avg = {}
     for fn in fns:
         img = read(fn)
-        avg[fn] = gu.get_average_color(img)
-
+        #print fn
+        try:
+            avg[fn] = gu.get_average_color(img)
+        except:
+            print "weird file {}".format(fn)
+            continue
+    fns = avg.keys()
     for i in range(len(parts)):
         for j in range(len(parts[0])):
             c = gu.get_average_color(parts[i][j].matrix)
             random.shuffle(fns)
+            found=False
             for fn in fns:
+                if found:
+                    break
                 if gu.rgb_colors_are_similar(c, avg[fn]):
                     parts[i][j].fillWithImage(read(fn))
+                    found=True
 
 
 
@@ -34,7 +43,7 @@ def comparisons(directory, main_pic):
     main_pic = resize(main_pic, (500,500),mode='nearest') 
     comps = get_all_pictures_in_directory(directory, recursive=True)
     main_part = ImagePart.from_whole_image(main_pic)
-    parts = divide_into_parts(main_pic, 20,20)
+    parts = divide_into_parts(main_pic, 35,35)
     
     compare(comps, parts)
 
