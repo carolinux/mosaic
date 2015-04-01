@@ -73,6 +73,7 @@ def assemble_from_parts(parts, border=False, text=False):
             part.addText()
         if border:
             part.addBorder()
+        print "Avg color for part {}:{}".format(part.number, part.get_average_color())
         pixels = part.get_all_pixels()
         origin = part.get_origin()
         for px in pixels:
@@ -92,8 +93,8 @@ def assemble_from_parts_luigi_test(parts, border=False, text=False):
     for i,part in enumerate(flat_parts):
         if part.number in range(6):
             part.fillWithImage(io.imread("./pictures/plate.jpeg"))
-        if border:
-            part.addBorder()
+        print "Avg color for part {}:{}".format(part.number, part.get_average_color())
+        part.fillWithColor(part.get_average_color())
         pixels = part.get_all_pixels()
         origin = part.get_origin()
         for px in pixels:

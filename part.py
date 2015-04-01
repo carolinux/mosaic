@@ -2,13 +2,15 @@ import copy
 import numpy as np
 from skimage import color
 from skimage import filter
-from skimage import img_as_float
+from skimage import img_as_ubyte
+from skimage import img_as_ubyte
 from skimage import img_as_uint
 from skimage.transform import resize 
 from skimage import measure
 import skimage.io as io
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import graph_util as gu
 
 class ImagePart(object):
     """A class that represents part of an image"""
@@ -18,12 +20,14 @@ class ImagePart(object):
     w = None
     h = None
     number=0 # the number of the part going right and then up from lower left
+    type = np.uint8
     def __init__(self, matrix, ll, number):
         self.w =len(matrix)
         self.h=len(matrix[0])
         self.number = number
         self.ll =ll
         self.matrix = matrix
+        self.type = matrix.dtype
         self.original_matrix = copy.deepcopy(matrix)
 
     def toImage(self):
@@ -33,7 +37,7 @@ class ImagePart(object):
     def from_whole_image(img):
         """Create an image part out of a whole image"""
         #import ipdb;ipdb.set_trace()
-        matrix = img_as_float(img)
+        matrix = img_as_ubyte(img)
         return ImagePart(matrix, (0,0), 0)
 
     @staticmethod
@@ -45,7 +49,7 @@ class ImagePart(object):
         (i,j) = origin
         matrix_part = matrix[i:(i+w if i+w<maxw else maxw),j:(j+h if j+h<maxh else maxh)]
 
-        matrix_part = img_as_float(matrix_part)
+        matrix_part = img_as_ubyte(matrix_part)
         return ImagePart(matrix_part, origin, number)
 
     def get_matrix(self):
@@ -66,12 +70,15 @@ class ImagePart(object):
             origin = self.ll
         return tuple(self.matrix[x-origin[0]][y-origin[1]])
 
+    def get_average_color(self):
+        return gu.get_average_color(self.matrix)
+
     def compareWithImage(self, image, show=False):
         """ See if an image matches the dominant colors etc of this particular part nicely"""
         # first resize image to fit:
         image = resize(image, (self.w,self.h),mode='nearest')
         this_image = self.toImage()
-        image = img_as_float(image)
+        image = img_as_ubyte(image)
         image = filter.gaussian_filter(image, 3) # TODO to calculate a good blur value
         #image = filter.sobel(image)
         gray = image.sum(-1)
@@ -116,6 +123,13 @@ class ImagePart(object):
     def fillWithImage(self, image):
         image = resize(image, (self.w,self.h),mode='nearest')
         self.matrix = copy.deepcopy(image)
+
+    def fillWithColor(self, rgb):
+        rgb = map(int,rgb)
+        #import ipdb;ipdb.set_trace()
+        self.matrix[:,:,0] = rgb[0]
+        self.matrix[:,:,1] = rgb[1]
+        self.matrix[:,:,2] = rgb[2]
 
     def addText(self):
         import text_util as txt
