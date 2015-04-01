@@ -21,7 +21,7 @@ def comparisons(directory, main_pic):
     main_part = ImagePart.from_whole_image(main_pic)
     parts = divide_into_parts(main_pic, 50,50)
     new_pic = assemble_from_parts_luigi_test(parts, border=False, text=False)
-    new_pic = new_pic.astype(np.uint8)
+    #new_pic = new_pic.astype(np.uint8)
     #new_pic = assemble_from_parts(parts, border=True, text=False)
     plt.imshow(new_pic)
     plt.show()

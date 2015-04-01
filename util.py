@@ -66,7 +66,7 @@ def assemble_from_parts(parts, border=False, text=False):
     h = sum([p.h for p in parts[0]])
     w = sum([p.w for p in np.transpose(parts)[0]])
     #import ipdb;ipdb.set_trace()
-    img = np.zeros((w,h,3))
+    img = np.zeros((w,h,3), dtype=np.uint8)
     flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
     for i,part in enumerate(flat_parts):
         if text:
@@ -88,7 +88,7 @@ def assemble_from_parts_luigi_test(parts, border=False, text=False):
     h = sum([p.h for p in parts[0]])
     w = sum([p.w for p in np.transpose(parts)[0]])
     #import ipdb;ipdb.set_trace()
-    img = np.zeros((w,h,3))
+    img = np.zeros((w,h,3), dtype=np.uint8)
     flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
     for i,part in enumerate(flat_parts):
         if part.number in range(6):

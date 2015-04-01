@@ -27,7 +27,8 @@ class ImagePart(object):
         self.number = number
         self.ll =ll
         self.matrix = matrix
-        self.type = matrix.dtype
+        self.dtype = matrix.dtype
+        assert(self.dtype==np.uint8)
         self.original_matrix = copy.deepcopy(matrix)
 
     def toImage(self):
@@ -122,6 +123,8 @@ class ImagePart(object):
 
     def fillWithImage(self, image):
         image = resize(image, (self.w,self.h),mode='nearest')
+        if image.dtype!=self.dtype:
+            image = img_as_ubyte(image)
         self.matrix = copy.deepcopy(image)
 
     def fillWithColor(self, rgb):
