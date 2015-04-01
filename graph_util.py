@@ -13,6 +13,11 @@ def delta(c1,c2):
     # can also look at skimage.color.deltaE_cie76(lab1, lab2)
     return math.sqrt((c1[0]-c2[0])**2 + (c1[1]-c2[1])**2 + (c1[2]-c2[2])**2)
 
+def rgb_colors_are_similar(c1,c2):
+    d = delta(c1,c2)
+    print d
+    return d<50
+
 def get_average_color(pic):
     # may not be rgb, depending on color space of picture
     r = np.average(pic[:,:,0])

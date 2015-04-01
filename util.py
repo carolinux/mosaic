@@ -82,23 +82,3 @@ def assemble_from_parts(parts, border=False, text=False):
             img[px]=list(c)
     return img
 
-def assemble_from_parts_luigi_test(parts, border=False, text=False):
-    """Assemble an image from image parts,
-    optionally with a border around the tiles"""
-    h = sum([p.h for p in parts[0]])
-    w = sum([p.w for p in np.transpose(parts)[0]])
-    #import ipdb;ipdb.set_trace()
-    img = np.zeros((w,h,3), dtype=np.uint8)
-    flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
-    for i,part in enumerate(flat_parts):
-        if part.number in range(6):
-            part.fillWithImage(io.imread("./pictures/plate.jpeg"))
-        print "Avg color for part {}:{}".format(part.number, part.get_average_color())
-        part.fillWithColor(part.get_average_color())
-        pixels = part.get_all_pixels()
-        origin = part.get_origin()
-        for px in pixels:
-            c = part.get_color(*px, origin=origin)
-            #import ipdb;ipdb.set_trace()
-            img[px]=list(c)
-    return img
