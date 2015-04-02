@@ -42,7 +42,7 @@ def compare(fns, parts):
 def comparisons(directory, main_pic):
     main_pic = io.imread(main_pic)
     main_pic = skimage.img_as_ubyte(main_pic)
-    main_pic = resize(main_pic, (500,500),mode='nearest') 
+    main_pic = resize(main_pic, (1000,1000),mode='nearest') 
     comps = get_all_pictures_in_directory(directory, recursive=True)
     main_part = ImagePart.from_whole_image(main_pic)
     parts = divide_into_parts(main_pic, 80,80)
