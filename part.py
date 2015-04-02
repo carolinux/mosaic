@@ -19,14 +19,17 @@ class ImagePart(object):
     ll = None # lower left point - origin
     w = None
     h = None
-    number=0 # the number of the part going right and then up from lower left
+    average = None
+    number = 0 # the number of the part going right and then up from lower left
     type = np.uint8
+    active = False # a part can become inactive if it is merged with another
     def __init__(self, matrix, ll, number):
         self.w =len(matrix)
         self.h=len(matrix[0])
         self.number = number
         self.ll =ll
         self.matrix = matrix
+        self.active = True
         self.dtype = matrix.dtype
         assert(self.dtype==np.uint8)
         self.original_matrix = copy.deepcopy(matrix)
@@ -72,54 +75,55 @@ class ImagePart(object):
         return tuple(self.matrix[x-origin[0]][y-origin[1]])
 
     def get_average_color(self):
-        return gu.get_average_color(self.matrix)
+        if self.average is None:
+            self.average = gu.get_average_color(self.matrix)
+        return self.average
 
-    def compareWithImage(self, image, show=False):
-        """ See if an image matches the dominant colors etc of this particular part nicely"""
-        # first resize image to fit:
-        image = resize(image, (self.w,self.h),mode='nearest')
-        this_image = self.toImage()
-        image = img_as_ubyte(image)
-        image = filter.gaussian_filter(image, 3) # TODO to calculate a good blur value
-        #image = filter.sobel(image)
-        gray = image.sum(-1)
-        contour = measure.find_contours(gray, 0.8)
-        #import ipdb;ipdb.set_trace()
-        # show side by side
-        if show:
-            fig = plt.figure()
-            # this image
-            a=fig.add_subplot(2,2,1)
-            imgplot = plt.imshow(this_image)
-            a.set_title('Base')
-            plt.colorbar(ticks=[0.1,0.3,0.5,0.7], orientation ='horizontal')
-            # the other image
-            a=fig.add_subplot(2,2,2)
-            imgplot = plt.imshow(image)
-            imgplot.set_clim(0.0,0.7)
-            a.set_title('Comparison')
-            plt.colorbar(ticks=[0.1,0.3,0.5,0.7], orientation='horizontal')
+    def is_similar(self, other):
+        """Parts are similar if they have same size
+        and very similar colour"""
+        if self.matrix.shape != other.matrix.shape:
+            return False
+        return gu.rgb_colors_are_similar(self.get_average_color(), other.get_average_color(), threshold=2)
 
-            # the contour of the part
-            a=fig.add_subplot(2,2,3)
-            r, g, b = np.rollaxis(this_image, -1)
-            plt.contourf(r, cmap=plt.cm.Reds)
-            plt.contourf(g, cmap=plt.cm.Greens)
-            plt.contourf(b, cmap=plt.cm.Blues)
-            a.set_title("Contour base")
+    def expand(self, all_parts, i, j, iteration, squares_only):
+        if squares_only:
+            neighbours = [(i,j+iteration),(i+iteration,j),(i+iteration,j+iteration)]
+            #if i==0 and j==0:
+                #import ipdb; ipdb.set_trace()
 
-            # the contour of the image
-            a=fig.add_subplot(2,2,4)
-            r, g, b = np.rollaxis(image, -1)
-            foo=plt.contourf(r, cmap=plt.cm.Reds)
-            plt.contourf(g, cmap=plt.cm.Greens)
-            plt.contourf(b, cmap=plt.cm.Blues)
-            dat0 =foo.allsegs[0][0]
-            plt.plot(dat0[:,0],dat0[:,1])
-            a.set_title("Contour comparison")
+            # check if the inbetween parts are inactive (for 2nd+ iteration merging)
+            for w in range(i+1,i+iteration):
+                for h in range(j+1,j+iteration):
+                    if w<len(all_parts) and h<len(all_parts[0]):
+                        if all_parts[w][h].active:
+                            return
 
-            plt.show()
-        return image
+            for x,y in neighbours:
+                try:
+                    neighbour = all_parts[x][y]
+                    if (not neighbour.active) or (not self.is_similar(neighbour)):
+                        # cannot merge
+                        return
+                except:
+                    return
+            # I can combine the part with its neighbours
+            # deactivate neighbours
+            for x,y in neighbours:
+                all_parts[x][y].active = False
+            # combine neighbouring matrices
+            new_matrix = np.zeros((2*self.w,2*self.h,3),dtype=np.uint8)
+            new_matrix[0:self.w,0:self.h] = copy.deepcopy(self.matrix)
+            new_matrix[self.w:2*self.w,self.h:2*self.h] = all_parts[i+iteration][j+iteration].matrix
+            new_matrix[self.w:2*self.w,0:self.h] = all_parts[i+iteration][j].matrix
+            new_matrix[0:self.w,self.h:2*self.h] = all_parts[i][j+iteration].matrix
+            self.matrix = new_matrix
+            self.h = 2* self.h
+            self.w = 2* self.w
+        # TODO: could also do non square tiling here
+        pass
+
+
 
     def fillWithImage(self, image):
         image = resize(image, (self.w,self.h),mode='nearest')
@@ -140,7 +144,7 @@ class ImagePart(object):
 
     def addBorder(self): # TODO image as float? color (1,1,1) ?
         width = 1 # can change later
-        color = (255,255,255)
+        color = (0,0,0)
         for x in range(width):
             for y in range(self.h):
                 self.matrix[x][y] = color

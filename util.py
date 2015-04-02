@@ -60,15 +60,29 @@ def divide_into_parts(img, numXtiles, numYtiles):
     width_y = int(math.ceil(img.shape[1]*1.0/numYtiles))
     return divide_into_tiles(img,(width_x, width_y))
 
+def expand(parts, iteration=1, squares_only = False):
+    """Expand parts to join with their neighbours if
+    they are similar color"""
+    for i in range(len(parts)):
+        for j in range(len(parts[0])):
+            part = parts[i][j] 
+            if not part.active:
+                continue
+            part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)
+
+
+
 def assemble_from_parts(parts, border=False, text=False):
     """Assemble an image from image parts,
     optionally with a border around the tiles"""
-    h = sum([p.h for p in parts[0]])
-    w = sum([p.w for p in np.transpose(parts)[0]])
+    h = sum([p.h for p in parts[0] if p.active])
+    w = sum([p.w for p in np.transpose(parts)[0] if p.active])
     #import ipdb;ipdb.set_trace()
     img = np.zeros((w,h,3), dtype=np.uint8)
     flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
     for i,part in enumerate(flat_parts):
+        if not part.active:
+            continue
         if text:
             part.addText()
         if border:

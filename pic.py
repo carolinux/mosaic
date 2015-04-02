@@ -25,6 +25,8 @@ def compare(fns, parts):
     fns = avg.keys()
     for i in range(len(parts)):
         for j in range(len(parts[0])):
+            if not parts[i][j].active:
+                continue
             c = gu.get_average_color(parts[i][j].matrix)
             random.shuffle(fns)
             found=False
@@ -43,10 +45,11 @@ def comparisons(directory, main_pic):
     main_pic = resize(main_pic, (500,500),mode='nearest') 
     comps = get_all_pictures_in_directory(directory, recursive=True)
     main_part = ImagePart.from_whole_image(main_pic)
-    parts = divide_into_parts(main_pic, 35,35)
-    
+    parts = divide_into_parts(main_pic, 80,80)
+    merging_iterations = 3
+    for i in range(merging_iterations):
+        expand(parts, iteration=i+1, squares_only=True)
     compare(comps, parts)
-
     new_pic = assemble_from_parts(parts, border=False, text=False)
     plt.imshow(new_pic)
     plt.show()
