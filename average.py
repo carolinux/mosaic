@@ -39,7 +39,7 @@ def isGood(feat):
 
 if __name__ == '__main__':
     directory = sys.argv[1]
-    fns = util.get_all_pictures_in_directory(directory)
+    fns = util.get_all_pictures_in_directory(directory, True)
     allc = 0
     counts = defaultdict(lambda: 0)
     allg = 0

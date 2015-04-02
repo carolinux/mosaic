@@ -31,23 +31,31 @@ def PILtoMatrix(pic):
 def main(args):
     http = urllib3.PoolManager()
     pics = 0
-    searchTerm = args[1]
-    out = args[2]
-    for startIndex in xrange(1,10000000000,4):
-        searchUrl = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + searchTerm + "&start=" + str(startIndex)
-        f = requests.get(searchUrl)
-        deserialized_output = json.loads(f.content)
-        try:
-            for i in range(4):
-                img = readGoogleImage(deserialized_output,i, http)
-                if avg.isGood(avg.getFeatures(img)):
-                    pics+=1
-                    io.imsave(os.path.join(out,"pic{}.jpg".format(pics)), img)
-                    print "found a good picture for tiling {}".format(datetime.now())
-                #plt.imshow(img)
-                #plt.show()
-        except Exception,e:
-            print "Could not read {}. Cause {}".format(getUrl(deserialized_output, i), str(e))
+    searchTerms = args[1]
+    base = args[2]
+    for searchTerm in searchTerms.split(','):
+        out = os.path.join(base,searchTerm)
+        os.makedirs(out)
+        for startIndex in xrange(1,100,4):
+            try: 
+                searchUrl = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + searchTerm + "&start=" + str(startIndex)
+
+                f = requests.get(searchUrl)
+                deserialized_output = json.loads(f.content)
+                try:
+                    for i in range(4):
+                        img = readGoogleImage(deserialized_output,i, http)
+                        if avg.isGood(avg.getFeatures(img)):
+                            pics+=1
+                            io.imsave(os.path.join(out,"pic{}.jpg".format(pics)), img)
+                            print "found a good picture for tiling {}".format(datetime.now())
+                        #plt.imshow(img)
+                        #plt.show()
+                except Exception,e:
+                    print "Could not read {}. Cause {}".format(getUrl(deserialized_output, i), str(e))
+            except Exception,e:
+                print "could not read {}th page from google, {}, {}".format(startIndex, str(e), datetime.now())
+                pass
 
 
 if __name__ == '__main__':

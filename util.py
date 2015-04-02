@@ -70,8 +70,6 @@ def expand(parts, iteration=1, squares_only = False):
                 continue
             part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)
 
-
-
 def assemble_from_parts(parts, border=False, text=False):
     """Assemble an image from image parts,
     optionally with a border around the tiles"""
