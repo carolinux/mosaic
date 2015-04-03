@@ -28,19 +28,25 @@ def readGoogleImage(deserialized_output,idx, http):
 def PILtoMatrix(pic):
     return np.array(pic.getdata(), dtype=np.uint8).reshape(pic.size[1], pic.size[0], 3)
 
+def get_all_keywords(fn):
+    words =open(fn,"r").read().replace("\n"," ").split(" ")
+    words = filter(lambda x : x.strip()!='',words)
+    return list(set(words))
+
 def main(args):
     http = urllib3.PoolManager()
     pics = 0
-    searchTerms = args[1]
+    searchTerms = get_all_keywords(args[1])
+    print searchTerms
     base = args[2]
-    for searchTerm in searchTerms.split(','):
+    for searchTerm in searchTerms:
         out = os.path.join(base,searchTerm)
         os.makedirs(out)
         for startIndex in xrange(1,100,4):
             try: 
                 searchUrl = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=" + searchTerm + "&start=" + str(startIndex)
 
-                f = requests.get(searchUrl)
+                f = requests.get(searchUrl, timeout=5)
                 deserialized_output = json.loads(f.content)
                 try:
                     for i in range(4):

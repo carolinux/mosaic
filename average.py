@@ -10,32 +10,43 @@ import util
 """ Check what the pictures in a directory look like with respect
 to how suitable they are for using as mosaic tiles"""
 
-Feature = namedtuple('Feature', 'std diff1 diff2 first2')
+Feature = namedtuple('Feature', 'std diff1 first2 contrast')
+Value = namedtuple('Value','val idx cnt')
+
+def get_popular_values(arr, num=2):
+
+    hist, bins = np.histogram(arr)
+    hist = list(hist)
+    shist = sorted(hist)
+    res = []
+    for i in range(1,num+1):
+        cnt = shist[-i]
+        index = hist.index(shist[-i])
+        res.append(Value(bins[index], index,cnt))
+    return res
+
 def getFeatures(fn):
     if isinstance(fn,str):
         pic = img_as_ubyte(io.imread(fn)) # uint8
     else:
         pic = fn
     hues = rgb2hsv(pic)[:,:,0]
+    brightness = rgb2hsv(pic)[:,:,2] # Value in HSV
     # std, mean, median
     std = np.std(hues)
-    hist, bins = np.histogram(hues)
-    hist = list(hist)
-    shist = sorted(hist)
     diff_avg = abs(np.mean(hues)-np.median(hues))
-    diff_hist = 1.0*(shist[-1] - shist[-2])/sum(hist)
-    max_index = hist.index(shist[-1]) 
-    second_max_index = hist.index(shist[-2]) 
-    third_max_index = hist.index(shist[-3])
-    total_count = sum(hist)
-    first_two_colors_close = (abs(max_index - second_max_index) == 1) or shist[-2] <(0.1 * total_count)
-    #if not first_two_colors_close:
-    #    import ipdb; ipdb.set_trace()
-    res = Feature(std, diff_avg, diff_hist, first_two_colors_close)
+    hue_vals = get_popular_values(hues, num=2)
+    brightness_vals = get_popular_values(brightness, num=3)
+    pixel_count = sum(np.histogram(hues)[0])
+    first_two_colors_close = (abs(hue_vals[0].idx - hue_vals[1].idx) == 1) or hue_vals[1].cnt <(0.1 * pixel_count)
+    good_contrast = True
+    if std == 0.0: # no variance in hue means grayscale image
+        good_contrast = abs(brightness_vals[0].idx - brightness_vals[1].idx) < 5 
+    res = Feature(std, diff_avg,  first_two_colors_close, good_contrast)
     return res
 
 def isGood(feat):
-    return feat.std<0.1 and feat.diff1<0.02 and feat.first2
+    return feat.std<0.1 and feat.diff1<0.02 and feat.first2 and feat.contrast
 
 if __name__ == '__main__':
     directory = sys.argv[1]
@@ -48,6 +59,7 @@ if __name__ == '__main__':
         try:
             data = getFeatures(fn)
         except Exception, e:
+            print e
             continue
         print fn,data
         allc+=1
