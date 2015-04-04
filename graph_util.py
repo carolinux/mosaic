@@ -4,7 +4,8 @@ from skimage import data, img_as_float,img_as_ubyte
 import matplotlib.image as mpimg
 import numpy as np
 import math
-from skimage.color import rgb2lab,lab2rgb, rgb2hsv
+import copy
+from skimage.color import rgb2lab,lab2rgb, rgb2hsv, hsv2rgb
 from skimage.color import deltaE_ciede2000 as deltalab
 
 def delta(c1,c2):
@@ -69,6 +70,48 @@ def plot2(image1, image2, title1="Base", title2="Comparison"):
     a=fig.add_subplot(2,1,2)
     imgplot = plt.imshow(image2)
     a.set_title(title2)
+    return fig
+
+def plot_infos(image):
+    fig = plt.figure()
+    # this image
+    a=fig.add_subplot(3,3,1)
+    imgplot = plt.imshow(image)
+    a.set_title("picture")
+    # the other image
+    a=fig.add_subplot(3,3,2)
+    color = create_color_img(*get_average_color(image))
+    imgplot = plt.imshow(color)
+    a.set_title("color")
+    a=fig.add_subplot(3,3,7)
+    hueonly = rgb2hsv(copy.deepcopy(image))
+    hueonly[:,:,1] = 0.5
+    hueonly[:,:,2] = 0.5
+    a.set_title("hue only")
+    plt.imshow(hsv2rgb(hueonly))
+    a=fig.add_subplot(3,3,8)
+    hueonly = rgb2hsv(copy.deepcopy(image))
+    hueonly[:,:,0] = 0.0
+    hueonly[:,:,2] = 0.5
+    a.set_title("sat only")
+    plt.imshow(hsv2rgb(hueonly))
+    a=fig.add_subplot(3,3,9)
+    hueonly = rgb2hsv(copy.deepcopy(image))
+    hueonly[:,:,0] = 0.0
+    hueonly[:,:,1] = 0.0
+    a.set_title("val only")
+    plt.imshow(hsv2rgb(hueonly))
+    hsv = rgb2hsv(image)
+    a = fig.add_subplot(3,3,3)
+    #import ipdb; ipdb.set_trace()
+    plt.hist(hsv[:,:,0].flatten(), bins=20)
+    a.set_title("Hue")
+    a = fig.add_subplot(3,3,4)
+    plt.hist(hsv[:,:,1].flatten(), bins=20)
+    a.set_title("Sat")
+    a = fig.add_subplot(3,3,6)
+    plt.hist(hsv[:,:,2].flatten(), bins=20)
+    a.set_title("Val (brighntess)")
     return fig
 
 def plot4(image1, image2, image3, image4, title1, title2, title3, title4):

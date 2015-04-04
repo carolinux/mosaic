@@ -22,6 +22,7 @@ class testKDTree(unittest.TestCase):
         self.assertEqual(content,"foo")
         key,content = tree.get_neighbours(np.array([0,6,-2]))
         self.assertEqual(content,"bar")
+        #FIXME flaky, depends on split
         key,content = tree.get_neighbours(np.array([0,6,-5]))
         self.assertEqual(content,"bar")
         #import ipdb; ipdb.set_trace()

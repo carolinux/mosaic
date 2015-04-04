@@ -1,6 +1,7 @@
 import unittest
 
 import skimage.io as io
+from skimage import img_as_ubyte
 from skimage.transform import resize
 import os
 import sys
@@ -14,13 +15,14 @@ class testUtil(unittest.TestCase):
         pass
 
     def test_divide_and_reassemble(self):
-        pic = io.imread("./kitteh.jpg")
+        pic = img_as_ubyte(io.imread("./kitteh.jpg"))
         pic = resize(pic, (500,500), mode='nearest')
+        pic = img_as_ubyte(pic)
         print "size "+str(pic.shape)
         for shape in [(10,10),(10,20),(30,30),(33,48)]:
             print shape
             parts = divide_into_parts(pic,*shape)
-            pic2 = assemble_from_parts(parts)
+            pic2 = assemble_from_parts(parts, False, False)
             self.assertTrue((pic==pic2).all())
         
         #  Examples:

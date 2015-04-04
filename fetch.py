@@ -12,6 +12,7 @@ import os
 from datetime import datetime
 
 import average as avg
+import graph_util as gu
 
 def getUrl(deserialized_output, idx):
     return deserialized_output['responseData']['results'][idx]['unescapedUrl']
@@ -51,10 +52,15 @@ def main(args):
                 try:
                     for i in range(4):
                         img = readGoogleImage(deserialized_output,i, http)
-                        if avg.isGood(avg.getFeatures(img)):
+                        feat = avg.getFeatures(img)
+                        if avg.isGood(feat):
+                            print feat
                             pics+=1
                             io.imsave(os.path.join(out,"pic{}.jpg".format(pics)), img)
-                            print "found a good picture for tiling {}".format(datetime.now())
+                            print "found a good picture(pic{}.jpg) for tiling {}".format(pics,datetime.now())
+                            fig = gu.plot_infos(img)
+
+                            plt.savefig(os.path.join(out,"pic{}_infos.jpg".format(pics)))
                         #plt.imshow(img)
                         #plt.show()
                 except Exception,e:

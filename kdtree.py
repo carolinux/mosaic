@@ -36,7 +36,7 @@ class Node:
             else:
                 return self.right.get_neighbours(key)
 
-    def inserContent(self, arr):
+    def insertContent(self, arr):
         #import ipdb; ipdb.set_trace()
         self.keys = arr[:,0:-1]
         self.content = arr[:,-1]
@@ -46,7 +46,8 @@ class Node:
             return
 
         if len(arr) <= max_leaf_size: # just insert them there
-            self.inserContent(arr)
+            print "Inserting {} into leaf {}".format(arr, self.bounds)
+            self.insertContent(arr)
             return
 
         if self.left is None and self.right is None:
@@ -55,6 +56,7 @@ class Node:
             values = arr[:,self.dimension]
             #TODO: type problems here
             values = map(float,values)
+            #TODO: random sample bigger than 1...
             self.median = np.median(np.random.choice(values)) # find the median of a random sample of the values for the split
             #TODO: What happens if everyone has the same value? Then everybody goes to the right leaf, which is stupid
             lbounds = copy.deepcopy(self.bounds)

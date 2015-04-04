@@ -16,6 +16,7 @@ Value = namedtuple('Value','val idx cnt')
 def get_popular_values(arr, num=2):
 
     hist, bins = np.histogram(arr)
+    #print hist,bins
     hist = list(hist)
     shist = sorted(hist)
     res = []
