@@ -7,6 +7,8 @@ import sys
 from skimage.transform import resize 
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
+import numpy as np
+from skimage.color import deltaE_ciede2000 as deltalab
 
 from part import ImagePart
 from util import *
@@ -16,17 +18,7 @@ def read(fn):
     #print fn
     return skimage.img_as_ubyte(io.imread(fn))
 
-def compare(fns, parts, parallelization=1):
-    avg = {}
-    for fn in fns:
-        img = read(fn)
-        #print fn
-        try:
-            avg[fn] = gu.get_average_color(img)
-        except:
-            print "weird file {}".format(fn)
-            continue
-
+def compare(tree, parts, parallelization=1):
     if parallelization>1:
         print "executing in {} cores".format(parallelization)
         pool = Pool()
@@ -37,13 +29,13 @@ def compare(fns, parts, parallelization=1):
             lb = i * step
             hb = (i+1) * step if i<procs-1 else len(parts)
             #print parts[lb:hb]
-            args.append((parts[lb:hb], avg, 0, 0))
+            args.append((parts[lb:hb], tree, 0, 0))
 
         res = pool.map(process_parts,args)
         return np.concatenate(res)
     else:
         print "executing in one core"
-        return process_parts((parts, avg, 0,0))
+        return process_parts((parts, tree, 0,0))
 
 def process_parts(args):
     try:
@@ -52,26 +44,33 @@ def process_parts(args):
         startx= args[2]
         starty = args[3]
         for i in range(len(parts)):
+            print "processing row {}".format(i)
             for j in range(len(parts[0])):
                 process_part(parts, avg, i+startx, j+starty)
         return parts
     except Exception,e:
         raise Exception(e)
 
-def process_part(parts, avg, i, j):
-    fns = avg.keys()
+def process_part(parts, tree, i, j):
     if not parts[i][j].active:
         return
-    c = gu.get_average_color(parts[i][j].matrix)
-    random.shuffle(fns)
-    found=False
-    for fn in fns:
-        if found:
-            break
-        if gu.rgb_colors_are_similar(c, avg[fn]):
+    c = gu.get_average_color_lab(parts[i][j].matrix)
+    for delta in(3,5,10,15):
+        low = [c[0]-delta, c[1]-delta,c[2]-delta]
+        high = [c[0]+delta, c[1]+delta, c[2]+delta]
+        keys,fns = tree.range_query(low, high)
+        #if keys is not None:
+            #for k in keys:
+                #print c,k
+                #print "delta= {}".format(gu.delta(c,k))
+        if fns is not None:
+            fn = np.random.choice(fns)
             parts[i][j].fillWithImage(read(fn))
-            found=True
-
+            return
+            #print "found tile for part {},{}".format(i,j)
+        else:
+            #print "not found tile for part {},{}".format(i,j)
+            continue
 
 def comparisons(directories, main_pic, par=1):
     main_pic = io.imread(main_pic)
@@ -79,14 +78,16 @@ def comparisons(directories, main_pic, par=1):
     main_pic = resize(main_pic, (600,600),mode='nearest')
     comps = []
     for directory in directories.split(","):
-        comps += get_all_pictures_in_directory(directory, recursive=True)
+        comps += get_all_pictures_in_directory(directory, recursive=True, ignore_regex=".*info.*")
     main_part = ImagePart.from_whole_image(main_pic)
-    parts = divide_into_parts(main_pic, 80,80)
-    merging_iterations = 3
+    parts = divide_into_parts(main_pic, 150,150)
+    merging_iterations = 4
     for i in range(merging_iterations):
         expand(parts, iteration=i+1, squares_only=True)
-    #parts = compare(comps, parts, parallelization=par)
-    new_pic = assemble_from_parts(parts, border=True, text=True)
+    tree = create_index_from_pictures(comps)
+    parts = compare(tree, parts, parallelization=par)
+    #new_pic = assemble_from_parts(parts, border=True, text=True)
+    new_pic = assemble_from_parts(parts, border=False, text=False)
     plt.imshow(new_pic)
     plt.show()
     

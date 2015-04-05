@@ -5,8 +5,11 @@ import os
 import re
 
 import skimage.io as io
+from skimage import img_as_ubyte
 
 from part import ImagePart
+from kdtree import KDTree
+import graph_util as gu
 
 def get_all_pictures_in_directory(directory_path,recursive=False, extensions=None, ignore_regex=None):
     if extensions is None:
@@ -25,6 +28,39 @@ def get_all_pictures_in_directory(directory_path,recursive=False, extensions=Non
             if extension in extensions:
                 picture_fns.append(full_path)
     return picture_fns
+
+def create_index_from_pictures(fns, leaf_size_hint=5):
+    out="avg.pickle"
+    import pickle
+    if os.path.exists(out):
+        avg = pickle.load(open(out,"rb"))
+    else:
+        avg={}
+    #import ipdb; ipdb.set_trace()
+    for i,fn in enumerate(fns):
+        if fn in avg.keys():
+            continue
+        img = img_as_ubyte(io.imread(fn))
+        #print fn
+        if i%10 ==0:
+            print "Calculated average of {} pictures out of {}".format(i, len(fns))
+        try:
+            avg[fn] = gu.get_average_color_lab(img)
+        except Exception,e:
+            print "weird file {}: {}".format(fn,e)
+            continue
+    pickle.dump(avg, open("avg.pickle","wb"))
+    print "Building tree nao"
+    bounds = [[0,100],[-128,128],[-128,128]] # TODO What iz bounds of lab color space?
+    index = KDTree(bounds, leaf_size_hint)
+    index.bulk_insert_dict_value_to_spatial(avg)
+    return index
+
+if __name__ == '__main__':
+    idx = create_index_from_pictures(get_all_pictures_in_directory("./50shades_pics",recursive=True,ignore_regex=".*info.*"))
+    res = idx.range_query([40,-14,30],[50, -10, 50])
+    print res
+    import ipdb; ipdb.set_trace()
 
 # in place!
 def checkerboard(img, parts):

@@ -30,9 +30,13 @@ def PILtoMatrix(pic):
     return np.array(pic.getdata(), dtype=np.uint8).reshape(pic.size[1], pic.size[0], 3)
 
 def get_all_keywords(fn):
-    words =open(fn,"r").read().replace("\n"," ").split(" ")
-    words = filter(lambda x : x.strip()!='',words)
-    return list(set(words))
+    if os.path.exists(fn):
+        words =open(fn,"r").read().replace("\n"," ").split(" ")
+        words = filter(lambda x : x.strip()!='',words)
+        return list(set(words))
+    else:
+        print "No file {} found. Will try to use input as comma separated input".format(fn)
+        return list(set(fn.split(",")))
 
 def main(args):
     http = urllib3.PoolManager()

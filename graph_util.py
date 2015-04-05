@@ -1,12 +1,15 @@
-
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-from skimage import data, img_as_float,img_as_ubyte
 import matplotlib.image as mpimg
+
 import numpy as np
 import math
 import copy
+
+from skimage import data, img_as_float,img_as_ubyte
 from skimage.color import rgb2lab,lab2rgb, rgb2hsv, hsv2rgb
 from skimage.color import deltaE_ciede2000 as deltalab
+from skimage.transform import resize
 
 def delta(c1,c2):
     """euclidean distance of color1 tuple to color2 tuple
@@ -22,16 +25,32 @@ def rgb_colors_are_similar(c1, c2, threshold=10):
     #print d
     return d<threshold
 
-#TODO: Does it have a clear dominant color (standard dev? mode? hist)
-def is_suitable_for_mosaic(pic):
-    return True
+def get_average_color_lab(img):
+    avc = get_average_color(img, convert_to_hsv=True)
+    return rgb_color_to_lab(*avc, dtype=np.float64)
 
-#TODO: Blur first (maybe ignore outliers somehow?)
-def get_average_color(pic):
-    # may not be rgb, depending on color space of picture
-    r = np.average(pic[:,:,0])
-    g = np.average(pic[:,:,1])
-    b = np.average(pic[:,:,2])
+def get_average_color(pic, convert_to_hsv=False):
+    if len(pic)>250:
+        pic = resize(pic, (250,250), mode='nearest')
+    if convert_to_hsv:
+        new_pic = rgb2hsv(pic)
+    else:
+        new_pic = pic
+    hues = new_pic[:,:,0]
+    cnts,hist = np.histogram(hues)
+    idx = np.argmax(cnts)
+    low = hist[idx]
+    high = hist[idx+1]
+    hues1 = hues[np.where(hues>=low)]
+    hues2 = hues1[np.where(hues1<=high)]
+    #import ipdb; ipdb.set_trace()
+    c1 = np.median(hues2)
+    c2 = np.average(new_pic[:,:,1])
+    c3 = np.average(new_pic[:,:,2])
+    if convert_to_hsv:
+        r,g,b = hsv_color_to_rgb(c1,c2,c3, dtype=np.float64)
+    else:
+        r,g,b=c1,c2,c3
     return r,g,b
 
 def hsv_color_to_rgb(l,a,b,dtype=np.uint8):
@@ -87,10 +106,10 @@ def plot_infos(image):
     a.set_title("picture")
     # the other image
     a=fig.add_subplot(3,3,2)
-    hsv = rgb2hsv(copy.deepcopy(image))
-    h,s,v = get_average_color(hsv)
+    hsv = rgb2hsv(image)
+    l,aa,b = get_average_color_lab(image)
     #import ipdb; ipdb.set_trace()
-    color = create_color_img(*hsv_color_to_rgb(h,s,v,dtype=np.float64))
+    color = create_color_img(*lab_color_to_rgb(l,aa,b,dtype=np.float64))
     imgplot = plt.imshow(color)
     a.set_title("color")
     a=fig.add_subplot(3,3,7)
@@ -99,6 +118,9 @@ def plot_infos(image):
     hueonly[:,:,2] = 0.5
     a.set_title("hue only")
     plt.imshow(hsv2rgb(hueonly))
+    #cb1 = mpl.colorbar.ColorbarBase(a, cmap="hsv",
+            #orientation='horizontal')
+    #cb1.set_label('colorz')
     a=fig.add_subplot(3,3,8)
     satonly = copy.deepcopy(hsv) 
     satonly[:,:,0] = 0.0
