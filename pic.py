@@ -44,13 +44,13 @@ def process_parts(args):
         startx= args[2]
         starty = args[3]
         for i in range(len(parts)):
-            print "processing row {}".format(i)
+            print "processing row {} out of {}".format(i,len(parts))
             for j in range(len(parts[0])):
                 process_part(parts, avg, i+startx, j+starty)
         return parts
     except Exception,e:
         raise Exception(e)
-
+@profile
 def process_part(parts, tree, i, j):
     if not parts[i][j].active:
         return
@@ -95,6 +95,12 @@ def comparisons(directories, main_pic, par=1):
     
 if __name__=="__main__":
     parallelism=1
+    if len(sys.argv)<2:
+        inp ="."
+        pic ="/home/carolinux/Documents/luigi.jpg"
+    else:
+        inp = sys.argv[2]
+        pic = sys.argv[1]
     if len(sys.argv)>3:
         parallelism = int(sys.argv[3])
-    comparisons(sys.argv[2],sys.argv[1], parallelism)
+    comparisons(inp,pic, parallelism)

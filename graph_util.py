@@ -31,6 +31,7 @@ def get_average_color_lab(img):
 
 def get_average_color(pic, convert_to_hsv=False):
     if len(pic)>250:
+        print "resizing"
         pic = resize(pic, (250,250), mode='nearest')
     if convert_to_hsv:
         new_pic = rgb2hsv(pic)
