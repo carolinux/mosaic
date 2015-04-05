@@ -85,12 +85,15 @@ def comparisons(directories, main_pic, par=1):
     merging_iterations = 3
     for i in range(merging_iterations):
         expand(parts, iteration=i+1, squares_only=True)
-    parts = compare(comps, parts, parallelization=par)
-    new_pic = assemble_from_parts(parts, border=False, text=False)
-    #plt.imshow(new_pic)
-    #plt.show()i
+    #parts = compare(comps, parts, parallelization=par)
+    new_pic = assemble_from_parts(parts, border=True, text=True)
+    plt.imshow(new_pic)
+    plt.show()
     
     io.imsave("pic_{}.jpg".format(datetime.now().microsecond),new_pic)
     
 if __name__=="__main__":
-    comparisons(sys.argv[1],"/home/carolinux/Documents/luigi.jpg", int(sys.argv[2]))
+    parallelism=1
+    if len(sys.argv)>3:
+        parallelism = int(sys.argv[3])
+    comparisons(sys.argv[2],sys.argv[1], parallelism)

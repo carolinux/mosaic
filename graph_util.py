@@ -34,8 +34,15 @@ def get_average_color(pic):
     b = np.average(pic[:,:,2])
     return r,g,b
 
-def lab_color_to_rgb(l,a,b):
-    res = lab2rgb(np.array([[[l,a,b]]],dtype=np.uint8))
+def hsv_color_to_rgb(l,a,b,dtype=np.uint8):
+    res = hsv2rgb(np.array([[[l,a,b]]],dtype=dtype))
+    return tuple(res.flatten())
+
+def rgb_color_to_hsv(r,g,b,dtype=np.uint8):
+    res = rgb2hsv(np.array([[[r,g,b]]],dtype=dtype))
+    return tuple(res.flatten())
+def lab_color_to_rgb(l,a,b,dtype=np.uint8):
+    res = lab2rgb(np.array([[[l,a,b]]],dtype=dtype))
     return tuple(res.flatten())
 
 def rgb_color_to_lab(r,g,b,dtype=np.uint8):
@@ -80,27 +87,30 @@ def plot_infos(image):
     a.set_title("picture")
     # the other image
     a=fig.add_subplot(3,3,2)
-    color = create_color_img(*get_average_color(image))
+    hsv = rgb2hsv(copy.deepcopy(image))
+    h,s,v = get_average_color(hsv)
+    #import ipdb; ipdb.set_trace()
+    color = create_color_img(*hsv_color_to_rgb(h,s,v,dtype=np.float64))
     imgplot = plt.imshow(color)
     a.set_title("color")
     a=fig.add_subplot(3,3,7)
-    hueonly = rgb2hsv(copy.deepcopy(image))
+    hueonly = copy.deepcopy(hsv) 
     hueonly[:,:,1] = 0.5
     hueonly[:,:,2] = 0.5
     a.set_title("hue only")
     plt.imshow(hsv2rgb(hueonly))
     a=fig.add_subplot(3,3,8)
-    hueonly = rgb2hsv(copy.deepcopy(image))
-    hueonly[:,:,0] = 0.0
-    hueonly[:,:,2] = 0.5
+    satonly = copy.deepcopy(hsv) 
+    satonly[:,:,0] = 0.0
+    satonly[:,:,2] = 0.5
     a.set_title("sat only")
-    plt.imshow(hsv2rgb(hueonly))
+    plt.imshow(hsv2rgb(satonly))
     a=fig.add_subplot(3,3,9)
-    hueonly = rgb2hsv(copy.deepcopy(image))
-    hueonly[:,:,0] = 0.0
-    hueonly[:,:,1] = 0.0
+    valonly = copy.deepcopy(hsv) 
+    valonly[:,:,0] = 0.0
+    valonly[:,:,1] = 0.0
     a.set_title("val only")
-    plt.imshow(hsv2rgb(hueonly))
+    plt.imshow(hsv2rgb(valonly))
     hsv = rgb2hsv(image)
     a = fig.add_subplot(3,3,3)
     #import ipdb; ipdb.set_trace()

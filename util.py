@@ -2,21 +2,26 @@ import numpy as np
 import math
 import itertools
 import os
+import re
 
 import skimage.io as io
 
 from part import ImagePart
 
-def get_all_pictures_in_directory(directory_path,recursive=False, extensions=None):
+def get_all_pictures_in_directory(directory_path,recursive=False, extensions=None, ignore_regex=None):
     if extensions is None:
         extensions = [".jpg",".png",".jpeg",".JPG",".JPEG"]
     picture_fns = []
     for filename in os.listdir(directory_path):
         full_path = os.path.join(directory_path,filename)
         if recursive and os.path.isdir(full_path):
-            picture_fns+=get_all_pictures_in_directory(full_path, recursive=True, extensions=extensions)
+            picture_fns+=get_all_pictures_in_directory(full_path, recursive=True, extensions=extensions,ignore_regex=ignore_regex)
         if not os.path.isdir(full_path):
             _,extension = os.path.splitext(full_path)
+            #import ipdb; ipdb.set_trace()
+            if ignore_regex is not None and re.match(ignore_regex, full_path):
+                continue
+            #print "{} doenst match ignore regext {}".format(full_path,ignore_regex)
             if extension in extensions:
                 picture_fns.append(full_path)
     return picture_fns

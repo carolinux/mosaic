@@ -4,8 +4,12 @@ from skimage import img_as_ubyte
 from collections import namedtuple, defaultdict
 import numpy as np
 import sys
+import re
+import os
+from matplotlib import pyplot as plt
 
 import util
+import graph_util
 
 """ Check what the pictures in a directory look like with respect
 to how suitable they are for using as mosaic tiles"""
@@ -42,7 +46,7 @@ def getFeatures(fn):
     first_two_colors_close = (abs(hue_vals[0].idx - hue_vals[1].idx) == 1) or hue_vals[1].cnt <(0.1 * pixel_count)
     good_contrast = True
     if std == 0.0: # no variance in hue means grayscale image
-        good_contrast = abs(brightness_vals[0].idx - brightness_vals[1].idx) < 5 
+        good_contrast = abs(brightness_vals[0].idx - brightness_vals[1].idx) < 3 
     res = Feature(std, diff_avg,  first_two_colors_close, good_contrast)
     return res
 
@@ -51,7 +55,7 @@ def isGood(feat):
 
 if __name__ == '__main__':
     directory = sys.argv[1]
-    fns = util.get_all_pictures_in_directory(directory, True)
+    fns = util.get_all_pictures_in_directory(directory, True, ignore_regex=".*_info.*")
     allc = 0
     counts = defaultdict(lambda: 0)
     allg = 0
@@ -73,6 +77,11 @@ if __name__ == '__main__':
         if isGood(data):
             allg+=1
             good.append(fn)
+        img = img_as_ubyte(io.imread(fn))
+        graph_util.plot_infos(img)
+        _,ext = os.path.splitext(fn)
+        info_fn = os.path.join(os.path.dirname(fn), re.sub(ext,"_info"+ext,os.path.basename(fn)))
+        plt.savefig(info_fn)
 
     for x in ["first2","diff1","std"]:
         print "{} % have {}= good value".format(100.0*counts[x]/allc,x)
