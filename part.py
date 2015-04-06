@@ -123,10 +123,10 @@ class ImagePart(object):
         # TODO: could also do non square tiling here
         pass
 
-
-
+    #@profile
     def fillWithImage(self, image):
-        image = resize(image, (self.w,self.h),mode='nearest')
+        if len(image) != self.h or len(image[0])!=self.w:
+            image = resize(image, (self.w,self.h))
         if image.dtype!=self.dtype:
             image = img_as_ubyte(image)
         self.matrix = copy.deepcopy(image)

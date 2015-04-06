@@ -36,26 +36,41 @@ def compare(tree, parts, parallelization=1):
     else:
         print "executing in one core"
         return process_parts((parts, tree, 0,0))
-
+#@profile
 def process_parts(args):
     try:
         parts = args[0]
-        avg = args[1]
+        tree = args[1]
         startx= args[2]
         starty = args[3]
+        part_to_fn = {}
         for i in range(len(parts)):
             print "processing row {} out of {}".format(i,len(parts))
             for j in range(len(parts[0])):
-                process_part(parts, avg, i+startx, j+starty)
+                process_part(parts, tree, part_to_fn, i, j)
+        cache = {}
+        #import ipdb; ipdb.set_trace()
+        h = parts[0][0].h
+        w = parts[0][0].w
+        for i,fn in enumerate(set(part_to_fn.values())):
+            print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
+            cache[fn] = resize(read(fn),(w,h))
+        for i, (k,v) in enumerate(part_to_fn.iteritems()):
+            if i%50==0:
+                print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
+            parts[k[0]][k[1]].fillWithImage(cache[v])
+
         return parts
+
     except Exception,e:
         raise Exception(e)
-@profile
-def process_part(parts, tree, i, j):
+
+def process_part(parts, tree,part_to_fn, i,j ):
     if not parts[i][j].active:
         return
     c = gu.get_average_color_lab(parts[i][j].matrix)
-    for delta in(3,5,10,15):
+    startdelta = np.random.choice(np.array([3,5,7]))
+    for delta in(startdelta,10,15):
         low = [c[0]-delta, c[1]-delta,c[2]-delta]
         high = [c[0]+delta, c[1]+delta, c[2]+delta]
         keys,fns = tree.range_query(low, high)
@@ -65,12 +80,13 @@ def process_part(parts, tree, i, j):
                 #print "delta= {}".format(gu.delta(c,k))
         if fns is not None:
             fn = np.random.choice(fns)
-            parts[i][j].fillWithImage(read(fn))
-            return
+            part_to_fn[(i,j)] = fn
+            break
             #print "found tile for part {},{}".format(i,j)
         else:
             #print "not found tile for part {},{}".format(i,j)
             continue
+
 
 def comparisons(directories, main_pic, par=1):
     main_pic = io.imread(main_pic)

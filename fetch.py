@@ -56,8 +56,9 @@ def main(args):
                 try:
                     for i in range(4):
                         img = readGoogleImage(deserialized_output,i, http)
-                        newy = int(len(img[0])/(len(img)/250.0))
-                        img = resize(img, (250,newy), mode="nearest")
+                        if len(img)>250:
+                            newy = int(len(img[0])/(len(img)/250.0))
+                            img = resize(img, (250,newy), mode="nearest")
                         feat = avg.getFeatures(img)
                         if avg.isGood(feat):
                             print feat

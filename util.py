@@ -21,7 +21,6 @@ def get_all_pictures_in_directory(directory_path,recursive=False, extensions=Non
             picture_fns+=get_all_pictures_in_directory(full_path, recursive=True, extensions=extensions,ignore_regex=ignore_regex)
         if not os.path.isdir(full_path):
             _,extension = os.path.splitext(full_path)
-            #import ipdb; ipdb.set_trace()
             if ignore_regex is not None and re.match(ignore_regex, full_path):
                 continue
             #print "{} doenst match ignore regext {}".format(full_path,ignore_regex)
@@ -36,7 +35,6 @@ def create_index_from_pictures(fns, leaf_size_hint=5):
         avg = pickle.load(open(out,"rb"))
     else:
         avg={}
-    #import ipdb; ipdb.set_trace()
     for i,fn in enumerate(fns):
         if fn in avg.keys():
             continue
@@ -49,6 +47,14 @@ def create_index_from_pictures(fns, leaf_size_hint=5):
         except Exception,e:
             print "weird file {}: {}".format(fn,e)
             continue
+    # cleanup the data structure
+    for fn in avg.keys():
+        if not os.path.exists(fn) or "ungood" in fn or "experiment" in fn or os.path.dirname(fn)==".":
+            del avg[fn]
+    dirs = set()
+    for fn in avg.keys():
+        dirs.add(os.path.dirname(fn))
+    #print dirs
     pickle.dump(avg, open("avg.pickle","wb"))
     print "Building tree nao"
     bounds = [[0,100],[-128,128],[-128,128]] # TODO What iz bounds of lab color space?
