@@ -35,7 +35,6 @@ class Node:
 
 
     def range_query(self, low, high):
-        #print "{}-{} overlaps with {}".format(low,high,self.bounds)
         if self.isLeaf():
             if not self.hasContent():
                 return None,None
@@ -79,7 +78,6 @@ class Node:
 
     def insertContent(self, arr):
         #import ipdb; ipdb.set_trace()
-        print "Inserting {} keys".format(len(arr))
         self.keys = arr[:,0:-1]
         self.content = arr[:,-1]
 
@@ -88,7 +86,6 @@ class Node:
             return
 
         if len(arr) <= max_leaf_size: # just insert them there
-            print "Inserting {} into leaf {}".format(arr, self.bounds)
             self.insertContent(arr)
             return
 
@@ -150,7 +147,6 @@ class KDTree:
         for i,(k,v) in enumerate(d.iteritems()):
             for j in range(self.dim):
                 arr[i][j] = v[j]
-            print "to insert: "+str(v)
             arr[i][self.dim] = k
 
         self.bulk_insert(arr)

@@ -18,18 +18,17 @@ def delta(c1,c2):
     # can also look at skimage.color.deltaE_cie76(lab1, lab2)
     return math.sqrt((c1[0]-c2[0])**2 + (c1[1]-c2[1])**2 + (c1[2]-c2[2])**2)
 
-def rgb_colors_are_similar(c1, c2, threshold=10):
-    lab1 = rgb_color_to_lab(*c1)
-    lab2 = rgb_color_to_lab(*c2)
-    d = deltalab(lab1,lab2)
+def colors_are_similar(lab1, lab2, threshold=10):
+    #d = deltalab(lab1,lab2)
+    d = delta(lab1, lab2)
     #print d
     return d<threshold
 
-def get_average_color_lab(img):
-    avc = get_average_color(img, convert_to_hsv=True)
+def get_average_color_lab(img,to_hsv=True,fast=False):
+    avc = get_average_color(img, convert_to_hsv=to_hsv, fast=fast)
     return rgb_color_to_lab(*avc, dtype=np.float64)
 
-def get_average_color(pic, convert_to_hsv=False):
+def get_average_color(pic, convert_to_hsv=False, fast=False):
     if len(pic)>250:
         print "resizing"
         pic = resize(pic, (250,250), mode='nearest')
@@ -37,15 +36,18 @@ def get_average_color(pic, convert_to_hsv=False):
         new_pic = rgb2hsv(pic)
     else:
         new_pic = pic
-    hues = new_pic[:,:,0]
-    cnts,hist = np.histogram(hues)
-    idx = np.argmax(cnts)
-    low = hist[idx]
-    high = hist[idx+1]
-    hues1 = hues[np.where(hues>=low)]
-    hues2 = hues1[np.where(hues1<=high)]
-    #import ipdb; ipdb.set_trace()
-    c1 = np.median(hues2)
+    if fast is True:
+        c1 = np.median(new_pic[:,:,0])
+    else:
+        hues = new_pic[:,:,0]
+        cnts,hist = np.histogram(hues)
+        idx = np.argmax(cnts)
+        low = hist[idx]
+        high = hist[idx+1]
+        hues1 = hues[np.where(hues>=low)]
+        hues2 = hues1[np.where(hues1<=high)]
+        #import ipdb; ipdb.set_trace()
+        c1 = np.median(hues2)
     c2 = np.average(new_pic[:,:,1])
     c3 = np.average(new_pic[:,:,2])
     if convert_to_hsv:

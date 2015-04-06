@@ -74,17 +74,26 @@ class ImagePart(object):
             origin = self.ll
         return tuple(self.matrix[x-origin[0]][y-origin[1]])
 
-    def get_average_color(self):
+    def get_average_color(self, fast=False):
+        if fast:
+            return gu.get_average_color_lab(self.matrix, True, fast=True)
         if self.average is None:
-            self.average = gu.get_average_color(self.matrix)
+            self.average = gu.get_average_color_lab(self.matrix)
         return self.average
 
     def is_similar(self, other):
         """Parts are similar if they have same size
         and very similar colour"""
-        if self.matrix.shape != other.matrix.shape:
-            return False
-        return gu.rgb_colors_are_similar(self.get_average_color(), other.get_average_color(), threshold=2)
+        try:
+            if self.matrix.shape != other.matrix.shape:
+
+                return False
+            #import ipdb; ipdb.set_trace()
+            res =  gu.colors_are_similar(self.get_average_color(fast=True), other.get_average_color(fast=True), threshold=5)
+            return res
+        except Exception,e:
+            import ipdb; ipdb.set_trace()
+            print e
 
     def expand(self, all_parts, i, j, iteration, squares_only):
         if squares_only:
@@ -126,7 +135,7 @@ class ImagePart(object):
     #@profile
     def fillWithImage(self, image):
         if len(image) != self.h or len(image[0])!=self.w:
-            image = resize(image, (self.w,self.h))
+            image = resize(image, (self.w,self.h),mode='nearest')
         if image.dtype!=self.dtype:
             image = img_as_ubyte(image)
         self.matrix = copy.deepcopy(image)

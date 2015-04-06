@@ -62,12 +62,6 @@ def create_index_from_pictures(fns, leaf_size_hint=5):
     index.bulk_insert_dict_value_to_spatial(avg)
     return index
 
-if __name__ == '__main__':
-    idx = create_index_from_pictures(get_all_pictures_in_directory("./50shades_pics",recursive=True,ignore_regex=".*info.*"))
-    res = idx.range_query([40,-14,30],[50, -10, 50])
-    print res
-    import ipdb; ipdb.set_trace()
-
 # in place!
 def checkerboard(img, parts):
     """Replace all image parts with black and white (just for fun)"""
@@ -110,20 +104,25 @@ def divide_into_parts(img, numXtiles, numYtiles):
 def expand(parts, iteration=1, squares_only = False):
     """Expand parts to join with their neighbours if
     they are similar color"""
+    inactive = 0
     for i in range(len(parts)):
+        if i%50==0:
+            print "expanding row {}".format(i)
         for j in range(len(parts[0])):
             part = parts[i][j] 
             if not part.active:
+                inactive+=1
                 continue
             part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)
+    print "Inactive parts {}".format(inactive)
 
 def assemble_from_parts(parts, border=False, text=False):
     """Assemble an image from image parts,
     optionally with a border around the tiles"""
     h = sum([p.h for p in parts[0] if p.active])
     w = sum([p.w for p in np.transpose(parts)[0] if p.active])
-    #import ipdb;ipdb.set_trace()
     img = np.zeros((w,h,3), dtype=np.uint8)
+    print "Assembling picture from parts"
     flat_parts = list(itertools.chain.from_iterable(parts)) # flatten the list of lists
     for i,part in enumerate(flat_parts):
         if not part.active:
@@ -133,11 +132,11 @@ def assemble_from_parts(parts, border=False, text=False):
         if border:
             part.addBorder()
         #print "Avg color for part {}:{}".format(part.number, part.get_average_color())
-        pixels = part.get_all_pixels()
         origin = part.get_origin()
-        for px in pixels:
-            c = part.get_color(*px, origin=origin)
-            #import ipdb;ipdb.set_trace()
-            img[px]=list(c)
+        try:
+            img[origin[0]:origin[0]+part.w,origin[1]:origin[1]+part.h] = part.get_matrix()
+        except:
+            import ipdb; ipdb.set_trace()
+            print e
     return img
 

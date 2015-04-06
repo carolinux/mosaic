@@ -49,12 +49,11 @@ def process_parts(args):
             for j in range(len(parts[0])):
                 process_part(parts, tree, part_to_fn, i, j)
         cache = {}
-        #import ipdb; ipdb.set_trace()
         h = parts[0][0].h
         w = parts[0][0].w
         for i,fn in enumerate(set(part_to_fn.values())):
             print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            cache[fn] = resize(read(fn),(w,h))
+            cache[fn] = resize(read(fn), (4*h,4*w),mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i%50==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
@@ -68,7 +67,7 @@ def process_parts(args):
 def process_part(parts, tree,part_to_fn, i,j ):
     if not parts[i][j].active:
         return
-    c = gu.get_average_color_lab(parts[i][j].matrix)
+    c = parts[i][j].get_average_color()
     startdelta = np.random.choice(np.array([3,5,7]))
     for delta in(startdelta,10,15):
         low = [c[0]-delta, c[1]-delta,c[2]-delta]
@@ -89,30 +88,40 @@ def process_part(parts, tree,part_to_fn, i,j ):
 
 
 def comparisons(directories, main_pic, par=1):
+    print "start"
     main_pic = io.imread(main_pic)
+    size = float(3*len(main_pic[0]))
     main_pic = skimage.img_as_ubyte(main_pic)
-    main_pic = resize(main_pic, (600,600),mode='nearest')
+    y = int(len(main_pic[0])*(size/len(main_pic)))
+    print "resizing to {}".format((size,y))
+    main_pic = resize(main_pic, (size,y))
+    print "resized"
     comps = []
-    for directory in directories.split(","):
-        comps += get_all_pictures_in_directory(directory, recursive=True, ignore_regex=".*info.*")
+    if inp is not None:
+        for directory in directories.split(","):
+            comps += get_all_pictures_in_directory(directory, recursive=True, ignore_regex=".*info.*")
     main_part = ImagePart.from_whole_image(main_pic)
-    parts = divide_into_parts(main_pic, 150,150)
-    merging_iterations = 4
+    print "Dividing into parts"
+    parts = divide_into_tiles(main_pic, (int(size/150),int(size/150)))
+    print "Divided"
+    merging_iterations = 6
     for i in range(merging_iterations):
+        print "Merging iteration {}".format(i)
         expand(parts, iteration=i+1, squares_only=True)
+    print "Create index"
     tree = create_index_from_pictures(comps)
+    print "Index created"
     parts = compare(tree, parts, parallelization=par)
-    #new_pic = assemble_from_parts(parts, border=True, text=True)
     new_pic = assemble_from_parts(parts, border=False, text=False)
-    plt.imshow(new_pic)
-    plt.show()
+    #plt.imshow(new_pic)
+    #plt.show()
     
     io.imsave("pic_{}.jpg".format(datetime.now().microsecond),new_pic)
     
 if __name__=="__main__":
     parallelism=1
     if len(sys.argv)<2:
-        inp ="."
+        inp =None
         pic ="/home/carolinux/Documents/luigi.jpg"
     else:
         inp = sys.argv[2]
