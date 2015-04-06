@@ -1,6 +1,7 @@
 from skimage.color import rgb2lab,lab2rgb, rgb2hsv
 import skimage.io as io
 from skimage import img_as_ubyte
+from skimage.transform import resize
 from collections import namedtuple, defaultdict
 import numpy as np
 import sys
@@ -78,6 +79,9 @@ if __name__ == '__main__':
             allg+=1
             good.append(fn)
         img = img_as_ubyte(io.imread(fn))
+        newy = int(len(img[0])/(len(img)/250.0))
+        img = resize(img, (250,newy), mode="nearest")
+        io.imsave(fn, img)
         graph_util.plot_infos(img)
         _,ext = os.path.splitext(fn)
         info_fn = os.path.join(os.path.dirname(fn), re.sub(ext,"_info"+ext,os.path.basename(fn)))
