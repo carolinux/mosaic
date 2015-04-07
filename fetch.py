@@ -8,6 +8,7 @@ import skimage.io as io
 from PIL import Image
 import numpy as np
 import shutil
+from skimage.transform import resize
 import os
 from datetime import datetime
 

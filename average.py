@@ -16,7 +16,7 @@ import graph_util
 to how suitable they are for using as mosaic tiles"""
 
 Feature = namedtuple('Feature', 'std diff1 first2 contrast')
-Value = namedtuple('Value','val idx cnt')
+Value = namedtuple('Value','val idx maxidx cnt')
 
 def get_popular_values(arr, num=2):
 
@@ -28,7 +28,7 @@ def get_popular_values(arr, num=2):
     for i in range(1,num+1):
         cnt = shist[-i]
         index = hist.index(shist[-i])
-        res.append(Value(bins[index], index,cnt))
+        res.append(Value(bins[index], index,len(hist)-1,cnt))
     return res
 
 def getFeatures(fn):
@@ -44,7 +44,9 @@ def getFeatures(fn):
     hue_vals = get_popular_values(hues, num=2)
     brightness_vals = get_popular_values(brightness, num=3)
     pixel_count = sum(np.histogram(hues)[0])
-    first_two_colors_close = (abs(hue_vals[0].idx - hue_vals[1].idx) == 1) or hue_vals[1].cnt <(0.1 * pixel_count)
+    first_two_colors_close = (abs(hue_vals[0].idx - hue_vals[1].idx) == 1) or (hue_vals[0].idx==0 and\
+        hue_vals[1].idx==hue_vals[1].maxidx ) or (hue_vals[0].idx==hue_vals[0].maxidx and hue_vals[1].idx==0)\
+        or (hue_vals[1].cnt <(0.1 * pixel_count))
     good_contrast = True
     if std == 0.0: # no variance in hue means grayscale image
         good_contrast = abs(brightness_vals[0].idx - brightness_vals[1].idx) < 3 

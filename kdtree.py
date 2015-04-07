@@ -96,7 +96,7 @@ class Node:
             #TODO: type problems here
             values = map(float,values)
             #TODO: random sample bigger than 1...
-            self.median = np.median(np.random.choice(values, int(0.2 * len(values))))
+            self.median = np.median(np.random.choice(values, max(int(0.2 * len(values)),1)))
             # find the median of a random sample of the values for the split
             #TODO: What happens if everyone has the same value? Then everybody goes to the right leaf, which is stupid
             lbounds = copy.deepcopy(self.bounds)

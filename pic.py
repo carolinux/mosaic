@@ -49,11 +49,12 @@ def process_parts(args):
             for j in range(len(parts[0])):
                 process_part(parts, tree, part_to_fn, i, j)
         cache = {}
-        h = parts[0][0].h
-        w = parts[0][0].w
+        h = min([x.h for x in parts[len(parts)/2]])
+        w = min([x.w for x in parts[len(parts[0])/2]])
         for i,fn in enumerate(set(part_to_fn.values())):
             print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            cache[fn] = resize(read(fn), (4*h,4*w),mode='nearest')
+            #FIXME: 4 is a magic number, h, w may be badly computed
+            cache[fn] = resize(read(fn), (60*h,60*w),mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i%50==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
@@ -90,7 +91,7 @@ def process_part(parts, tree,part_to_fn, i,j ):
 def comparisons(directories, main_pic, par=1):
     print "start"
     main_pic = io.imread(main_pic)
-    size = float(3*len(main_pic[0]))
+    size = float(2*len(main_pic[0]))
     main_pic = skimage.img_as_ubyte(main_pic)
     y = int(len(main_pic[0])*(size/len(main_pic)))
     print "resizing to {}".format((size,y))

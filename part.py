@@ -75,8 +75,8 @@ class ImagePart(object):
         return tuple(self.matrix[x-origin[0]][y-origin[1]])
 
     def get_average_color(self, fast=False):
-        if fast:
-            return gu.get_average_color_lab(self.matrix, True, fast=True)
+        #if fast:
+            #return gu.get_average_color_lab(self.matrix, True, fast=True)
         if self.average is None:
             self.average = gu.get_average_color_lab(self.matrix)
         return self.average
