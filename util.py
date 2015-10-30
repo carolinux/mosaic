@@ -116,7 +116,7 @@ def expand(parts, iteration=1, squares_only = False):
             part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)
     print "Inactive parts {}".format(inactive)
 
-def assemble_from_parts(parts, border=False, text=False):
+def assemble_from_parts(parts, border=False, text=False, bordercolor=(0,0,0)):
     """Assemble an image from image parts,
     optionally with a border around the tiles"""
     h = sum([p.h for p in parts[0] if p.active])
@@ -130,7 +130,7 @@ def assemble_from_parts(parts, border=False, text=False):
         if text:
             part.addText()
         if border:
-            part.addBorder()
+            part.addBorder(bordercolor)
         #print "Avg color for part {}:{}".format(part.number, part.get_average_color())
         origin = part.get_origin()
         try:

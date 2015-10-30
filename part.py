@@ -151,9 +151,8 @@ class ImagePart(object):
         import text_util as txt
         self.matrix = txt.drawTextOnImage(str(self.number), copy.deepcopy(self.matrix))
 
-    def addBorder(self): # TODO image as float? color (1,1,1) ?
+    def addBorder(self, color): # TODO image as float? color (1,1,1) ?
         width = 1 # can change later
-        color = (0,0,0)
         for x in range(width):
             for y in range(self.h):
                 self.matrix[x][y] = color

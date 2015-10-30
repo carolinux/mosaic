@@ -103,9 +103,9 @@ def comparisons(directories, main_pic, par=1):
             comps += get_all_pictures_in_directory(directory, recursive=True, ignore_regex=".*info.*")
     main_part = ImagePart.from_whole_image(main_pic)
     print "Dividing into parts"
-    parts = divide_into_tiles(main_pic, (int(size/150),int(size/150)))
+    parts = divide_into_tiles(main_pic, (int(size/250),int(size/250)))
     print "Divided"
-    merging_iterations = 6
+    merging_iterations = 4
     for i in range(merging_iterations):
         print "Merging iteration {}".format(i)
         expand(parts, iteration=i+1, squares_only=True)
