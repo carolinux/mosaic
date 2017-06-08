@@ -3,6 +3,9 @@ import math
 import itertools
 import os
 import re
+import pickle
+
+import scandir
 
 import skimage.io as io
 from skimage import img_as_ubyte
@@ -28,13 +31,27 @@ def get_all_pictures_in_directory(directory_path,recursive=False, extensions=Non
                 picture_fns.append(full_path)
     return picture_fns
 
-def create_index_from_pictures(fns, leaf_size_hint=5):
-    out="avg.pickle"
-    import pickle
-    if os.path.exists(out):
-        avg = pickle.load(open(out,"rb"))
-    else:
-        avg={}
+def get_all_pictures_in_directory_optimized(directory_path, ignore_regex=None):
+    """ Works for large directory with just image files in it """
+    picture_fns = []
+    i = 0
+    for fn_it in scandir.scandir(directory_path):
+        full_path = os.path.abspath(fn_it.path)
+        i+=1
+        if i%200 == 0:
+            print "Scanned {} images".format(i)
+        if ignore_regex is not None and re.match(ignore_regex, full_path):
+            continue
+        if not os.path.isdir(full_path):
+                picture_fns.append(full_path)
+    return picture_fns
+
+def create_index_from_pictures(fns, pickle_file, leaf_size_hint=5):
+    if os.path.exists(pickle_file):
+        print ("Index with tag already exists")
+        index = pickle.load(open(pickle_file, 'rb'))
+        return index
+    avg={}
     for i,fn in enumerate(fns):
         if fn in avg.keys():
             continue
@@ -55,11 +72,12 @@ def create_index_from_pictures(fns, leaf_size_hint=5):
     for fn in avg.keys():
         dirs.add(os.path.dirname(fn))
     #print dirs
-    pickle.dump(avg, open("avg.pickle","wb"))
+    #pickle.dump(avg, open("avg.pickle","wb"))
     print "Building tree nao"
     bounds = [[0,100],[-128,128],[-128,128]] # TODO What iz bounds of lab color space?
     index = KDTree(bounds, leaf_size_hint)
     index.bulk_insert_dict_value_to_spatial(avg)
+    pickle.dump(index, open(pickle_file, 'wb'))
     return index
 
 # in place!

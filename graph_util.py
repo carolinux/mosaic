@@ -1,3 +1,4 @@
+from collections import Counter
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -26,7 +27,18 @@ def colors_are_similar(lab1, lab2, threshold=10):
 
 def get_average_color_lab(img,to_hsv=True,fast=False):
     avc = get_average_color(img, convert_to_hsv=to_hsv, fast=fast)
+    #avc = get_dominant_color(img)
+    #print avc
     return rgb_color_to_lab(*avc, dtype=np.float64)
+
+def most_common(lst):
+    return max(set(lst), key=lst.count)
+
+def get_dominant_color(pic):
+    # TODO: try also hsv here
+    colors = pic.flatten().reshape(-1, 3)
+    lst = [ tuple(c) for c in colors]
+    return Counter(lst).most_common()[0][0]
 
 def get_average_color(pic, convert_to_hsv=False, fast=False):
     if len(pic)>250:

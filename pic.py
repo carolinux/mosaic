@@ -1,3 +1,7 @@
+import argparse
+import pickle
+import os
+
 import skimage.io as io
 import random
 import skimage
@@ -8,11 +12,9 @@ from skimage.transform import resize
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 import numpy as np
-from skimage.color import deltaE_ciede2000 as deltalab
 
-from part import ImagePart
 from util import *
-import graph_util as gu
+
 
 def read(fn):
     #print fn
@@ -50,10 +52,13 @@ def process_parts(args):
                 process_part(parts, tree, part_to_fn, i, j)
         cache = {}
         h = min([x.h for x in parts[len(parts)/2]])
-        w = min([x.w for x in parts[len(parts[0])/2]])
+        try:
+            w = min([x.w for x in parts[len(parts[0])/2]])
+        except:
+            w = h
         for i,fn in enumerate(set(part_to_fn.values())):
             print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            #FIXME: 4 is a magic number, h, w may be badly computed
+            #FIXME: 60 is a magic number, h, w may be badly computed
             cache[fn] = resize(read(fn), (60*h,60*w),mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i%50==0:
@@ -63,7 +68,8 @@ def process_parts(args):
         return parts
 
     except Exception,e:
-        raise Exception(e)
+        import traceback
+        raise Exception("{}:{}, {}, {}".format(e, traceback.format_exc(), parts[0], len(parts[0])))
 
 def process_part(parts, tree,part_to_fn, i,j ):
     if not parts[i][j].active:
@@ -73,7 +79,7 @@ def process_part(parts, tree,part_to_fn, i,j ):
     for delta in(startdelta,10,15):
         low = [c[0]-delta, c[1]-delta,c[2]-delta]
         high = [c[0]+delta, c[1]+delta, c[2]+delta]
-        keys,fns = tree.range_query(low, high)
+        keys, fns = tree.range_query(low, high)
         #if keys is not None:
             #for k in keys:
                 #print c,k
@@ -87,46 +93,50 @@ def process_part(parts, tree,part_to_fn, i,j ):
             #print "not found tile for part {},{}".format(i,j)
             continue
 
+def add_suffix(fn, suffix):
+    b, ext = os.path.splitext(fn)
+    return b + suffix + ext
 
-def comparisons(directories, main_pic, par=1):
+def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1):
+
     print "start"
-    main_pic = io.imread(main_pic)
-    size = float(2*len(main_pic[0]))
+    main_pic = io.imread(main_fn)
+    size = target_width * 1.0
     main_pic = skimage.img_as_ubyte(main_pic)
     y = int(len(main_pic[0])*(size/len(main_pic)))
     print "resizing to {}".format((size,y))
     main_pic = resize(main_pic, (size,y))
     print "resized"
-    comps = []
-    if inp is not None:
-        for directory in directories.split(","):
-            comps += get_all_pictures_in_directory(directory, recursive=True, ignore_regex=".*info.*")
-    main_part = ImagePart.from_whole_image(main_pic)
+
+
     print "Dividing into parts"
-    parts = divide_into_tiles(main_pic, (int(size/250),int(size/250)))
+    parts = divide_into_tiles(main_pic, (int(size/tiles),int(size/tiles)))
     print "Divided"
     merging_iterations = 4
     for i in range(merging_iterations):
         print "Merging iteration {}".format(i)
         expand(parts, iteration=i+1, squares_only=True)
-    print "Create index"
-    tree = create_index_from_pictures(comps)
-    print "Index created"
-    parts = compare(tree, parts, parallelization=par)
+
+    parts = compare(tree, parts, parallelization=parallelism)
     new_pic = assemble_from_parts(parts, border=False, text=False)
-    #plt.imshow(new_pic)
-    #plt.show()
-    
-    io.imsave("pic_{}.jpg".format(datetime.now().microsecond),new_pic)
+
+    out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}".format(target_width, tiles, datetime.now().microsecond))
+    print out_fn
+    io.imsave(out_fn, new_pic)
     
 if __name__=="__main__":
-    parallelism=1
-    if len(sys.argv)<2:
-        inp =None
-        pic ="/home/carolinux/Documents/luigi.jpg"
-    else:
-        inp = sys.argv[2]
-        pic = sys.argv[1]
-    if len(sys.argv)>3:
-        parallelism = int(sys.argv[3])
-    comparisons(inp,pic, parallelism)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pic")
+    parser.add_argument("tree")
+    parser.add_argument("-p", "--parallelism", type=int, default=1)
+    parser.add_argument("-t", "--tiles", type=int, default=150)
+    parser.add_argument("-w", "--width", type=int, default=2000)
+    args = parser.parse_args()
+
+    main_pic = args.pic
+    tree_fn = args.tree
+    parallelism= args.parallelism
+    tiles = args.tiles
+    target_width = args.width
+    tree = pickle.load(open(tree_fn,'rb'))
+    comparisons(main_pic, tree, tiles=tiles, target_width=target_width, parallelism=parallelism)
