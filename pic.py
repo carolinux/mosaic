@@ -128,7 +128,7 @@ def add_suffix(fn, suffix):
     b, ext = os.path.splitext(fn)
     return b + suffix + ext
 
-def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1):
+def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True, merging_iterations=4):
 
     print "start"
     main_pic = io.imread(main_fn)
@@ -143,7 +143,6 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1):
     print "Dividing into parts"
     parts = divide_into_tiles(main_pic, (int(size/tiles),int(size/tiles)))
     print "Divided"
-    merging_iterations = 4
     for i in range(merging_iterations):
         print "Merging iteration {}".format(i+1)
         expand(parts, iteration=i+1, squares_only=True)
@@ -154,8 +153,9 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1):
     out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}".format(target_width, tiles, datetime.now().microsecond))
     print out_fn
     io.imsave(out_fn, new_pic)
-    from PIL import Image
-    Image.open(out_fn).show()
+    if show:
+        from PIL import Image
+        Image.open(out_fn).show()
     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -164,6 +164,7 @@ if __name__=="__main__":
     parser.add_argument("-p", "--parallelism", type=int, default=1)
     parser.add_argument("-t", "--tiles", type=int, default=150)
     parser.add_argument("-w", "--width", type=int, default=2000)
+    parser.add_argument("--no-show", type=bool, action='store_true')
     args = parser.parse_args()
 
     main_pic = args.pic
@@ -172,4 +173,4 @@ if __name__=="__main__":
     tiles = args.tiles
     target_width = args.width
     tree = pickle.load(open(tree_fn,'rb'))
-    comparisons(main_pic, tree, tiles=tiles, target_width=target_width, parallelism=parallelism)
+    comparisons(main_pic, tree, tiles=tiles, target_width=target_width, parallelism=parallelism, show=not args.no_show)
