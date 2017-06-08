@@ -37,6 +37,9 @@ class ImagePart(object):
         assert(self.dtype==np.uint8)
         self.original_matrix = copy.deepcopy(matrix)
 
+    def size(self):
+        return (self.w, self.h)
+
     def isActive(self):
         return self.active
 

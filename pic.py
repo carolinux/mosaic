@@ -50,11 +50,21 @@ def find_nearest_active_vertical_neighbour_fn(part_to_fn, i, j):
             return part_to_fn[(i, j)]
     return None
 
+def get_max_size(sizes):
+    argmax = None
+    maxsize = 1
+    for w,h in sizes:
+        if w * h>maxsize:
+            maxsize = w*h
+            argmax = (w, h)
+
+    return argmax
 
 def process_parts(args):
     try:
         parts = args[0]
         tree = args[1]
+        sizes = set()
 
         part_to_fn = {}
         for i in range(len(parts)):
@@ -69,20 +79,19 @@ def process_parts(args):
                     # print 'gimp "{}" "{}"'.format(fn, previously_used_fn)
                 if fn is not None:
                     previously_used_fn = fn
-        cache = {}
-        h = min([x.h for x in parts[len(parts)/2]])
-        try:
-            w = min([x.w for x in parts[len(parts[0])/2]])
-        except:
-            w = h
+                    sizes.add(parts[i][j].size())
+        print ("All sizes of tiles seen: {}".format(sizes))
+        (w, h) = get_max_size(sizes)
+        pic_matrix_cache = {}
+
         for i,fn in enumerate(set(part_to_fn.values())):
-            #print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            #FIXME: 60 is a magic number, h, w may be badly computed
-            cache[fn] = resize(read(fn), (60*h,60*w),mode='nearest')
+            if i % 100 ==0:
+                print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
+            pic_matrix_cache[fn] = resize(read(fn), (h,w), mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
-            if i%1000==0:
+            if i % 2000==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
-            parts[k[0]][k[1]].fillWithImage(cache[v])
+            parts[k[0]][k[1]].fillWithImage(pic_matrix_cache[v])
 
         return parts
 
