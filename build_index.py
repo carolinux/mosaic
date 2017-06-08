@@ -1,17 +1,22 @@
+import argparse
 import os
-import sys
+
 
 from util import create_index_from_pictures, get_all_pictures_in_directory_optimized
 
 
-def build_from_directories(directory_list, tag):
+def build_from_directories(directory_list, tag, leaf_size):
     fns = []
     for directory in directory_list:
         fns += get_all_pictures_in_directory_optimized(directory, ignore_regex=".*info.*")
     pickle_file = os.path.join("trees", tag+".pickle")
-    create_index_from_pictures(fns, pickle_file)
+    create_index_from_pictures(fns, pickle_file, leaf_size_hint=leaf_size)
     
 if __name__=="__main__":
-    comma_separated_dirs = sys.argv[1]
-    tag = sys.argv[2]
-    build_from_directories(comma_separated_dirs.split(","), tag)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dirs")
+    parser.add_argument("tag")
+    parser.add_argument("-l", "--leaf-size", type=int, default=10)
+
+    args = parser.parse_args()
+    build_from_directories(args.dirs.split(","), args.tag, args.leaf_size)

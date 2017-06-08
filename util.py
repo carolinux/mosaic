@@ -57,8 +57,8 @@ def create_index_from_pictures(fns, pickle_file, leaf_size_hint=5):
         if fn in avg.keys():
             continue
         img = img_as_ubyte(io.imread(fn))
-        #print fn
-        if i%10 ==0:
+
+        if i%50 ==0:
             print "Calculated average of {} pictures out of {}".format(i, len(fns))
         try:
             avg[fn] = gu.get_average_color_lab(img)
