@@ -31,25 +31,44 @@ def compare(tree, parts, parallelization=1):
             lb = i * step
             hb = (i+1) * step if i<procs-1 else len(parts)
             #print parts[lb:hb]
-            args.append((parts[lb:hb], tree, 0, 0))
+            args.append((parts[lb:hb], tree))
 
         res = pool.map(process_parts,args)
         return np.concatenate(res)
     else:
         print "executing in one core"
-        return process_parts((parts, tree, 0,0))
-#@profile
+        return process_parts((parts, tree))
+
+
+def find_nearest_active_vertical_neighbour_fn(part_to_fn, i, j):
+    """ Finds the closet tile above the current i,j that is active
+        and returns its filename
+    """
+    while(i>=1):
+        i = i-1
+        if (i, j) in part_to_fn:
+            return part_to_fn[(i, j)]
+    return None
+
+
 def process_parts(args):
     try:
         parts = args[0]
         tree = args[1]
-        startx= args[2]
-        starty = args[3]
+
         part_to_fn = {}
         for i in range(len(parts)):
-            print "processing row {} out of {}".format(i,len(parts))
+            #print "processing row {} out of {}".format(i,len(parts))
+            previously_used_fn = None
             for j in range(len(parts[0])):
-                process_part(parts, tree, part_to_fn, i, j)
+                fn = process_part(parts, tree, part_to_fn, i, j)
+                if fn is not None and (fn == previously_used_fn or find_nearest_active_vertical_neighbour_fn(part_to_fn, i, j) == fn):
+                    # try one more time with bigger delta for horizontal/vertical diversity
+                    # print fn, previously_used_fn
+                    fn = process_part(parts, tree, part_to_fn, i, j, deltas=(18,20,25))
+                    # print 'gimp "{}" "{}"'.format(fn, previously_used_fn)
+                if fn is not None:
+                    previously_used_fn = fn
         cache = {}
         h = min([x.h for x in parts[len(parts)/2]])
         try:
@@ -57,11 +76,11 @@ def process_parts(args):
         except:
             w = h
         for i,fn in enumerate(set(part_to_fn.values())):
-            print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
+            #print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
             #FIXME: 60 is a magic number, h, w may be badly computed
             cache[fn] = resize(read(fn), (60*h,60*w),mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
-            if i%50==0:
+            if i%1000==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
             parts[k[0]][k[1]].fillWithImage(cache[v])
 
@@ -71,12 +90,14 @@ def process_parts(args):
         import traceback
         raise Exception("{}:{}, {}, {}".format(e, traceback.format_exc(), parts[0], len(parts[0])))
 
-def process_part(parts, tree,part_to_fn, i,j ):
+def process_part(parts, tree, part_to_fn, i,j, deltas=None):
     if not parts[i][j].active:
-        return
+        return None
     c = parts[i][j].get_average_color()
-    startdelta = np.random.choice(np.array([3,5,7]))
-    for delta in(startdelta,10,15):
+    if deltas is None:
+        startdelta = np.random.choice(np.array([3,5,7]))
+        deltas = (startdelta,10,15)
+    for delta in deltas:
         low = [c[0]-delta, c[1]-delta,c[2]-delta]
         high = [c[0]+delta, c[1]+delta, c[2]+delta]
         keys, fns = tree.range_query(low, high)
@@ -87,11 +108,12 @@ def process_part(parts, tree,part_to_fn, i,j ):
         if fns is not None:
             fn = np.random.choice(fns)
             part_to_fn[(i,j)] = fn
-            break
+            return fn
             #print "found tile for part {},{}".format(i,j)
         else:
             #print "not found tile for part {},{}".format(i,j)
             continue
+    return None
 
 def add_suffix(fn, suffix):
     b, ext = os.path.splitext(fn)

@@ -23,6 +23,7 @@ class ImagePart(object):
     number = 0 # the number of the part going right and then up from lower left
     type = np.uint8
     active = False # a part can become inactive if it is merged with another
+
     def __init__(self, matrix, ll, number):
         self.w =len(matrix)
         self.h=len(matrix[0])
@@ -33,6 +34,9 @@ class ImagePart(object):
         self.dtype = matrix.dtype
         assert(self.dtype==np.uint8)
         self.original_matrix = copy.deepcopy(matrix)
+
+    def isActive(self):
+        return self.active
 
     def toImage(self):
         return self.matrix
