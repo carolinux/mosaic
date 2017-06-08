@@ -1,3 +1,5 @@
+import random
+
 import copy
 import numpy as np
 from skimage import color

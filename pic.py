@@ -136,7 +136,7 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1):
     print "Divided"
     merging_iterations = 4
     for i in range(merging_iterations):
-        print "Merging iteration {}".format(i)
+        print "Merging iteration {}".format(i+1)
         expand(parts, iteration=i+1, squares_only=True)
 
     parts = compare(tree, parts, parallelization=parallelism)
@@ -145,6 +145,8 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1):
     out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}".format(target_width, tiles, datetime.now().microsecond))
     print out_fn
     io.imsave(out_fn, new_pic)
+    from PIL import Image
+    Image.open(out_fn).show()
     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()

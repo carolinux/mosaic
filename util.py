@@ -2,6 +2,7 @@ import numpy as np
 import math
 import itertools
 import os
+import random
 import re
 import pickle
 
@@ -127,10 +128,14 @@ def expand(parts, iteration=1, squares_only = False):
         if i%50==0:
             print "expanding row {}".format(i)
         for j in range(len(parts[0])):
-            part = parts[i][j] 
+            part = parts[i][j]
             if not part.active:
                 inactive+=1
                 continue
+            # if >0.2, means that is is more likely the merging will be skipped
+            if  random.random()> 0.5:
+                continue
+
             part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)
     print "Inactive parts {}".format(inactive)
 
