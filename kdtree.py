@@ -15,9 +15,14 @@ class Node:
         # and the associated content
         self.keys = None
         self.content = None
+        self.dimensions_tried = []
 
     def next_dimension(self):
         return (self.dimension+1) % self.dimensions
+
+    def set_dimension(self, dimension):
+        self.dimension = dimension
+
 
     def hasContent(self):
         return self.keys is not None
@@ -81,15 +86,25 @@ class Node:
         self.keys = arr[:,0:-1]
         self.content = arr[:,-1]
 
+    def split_in_current_dimension_is_sensible(self, arr):
+        #TODO: here assess whether the values are diverse enough to be split
+        #values = arr[:, self.dimension]
+        return True
 
     def insert(self, arr, max_leaf_size):
         if len(arr) == 0:
             return
 
-        # FIXME: depth test is just a hacky fix
-        if len(arr) <= max_leaf_size or self.depth>100: # just insert them there
+        # FIXME: depth check is hacky, split_in_current_dimension_is_sensible is the way to do this properly
+        if len(arr) <= max_leaf_size or len(self.dimensions_tried) == self.dimensions or self.depth>100:
+            # just insert them there
             self.insertContent(arr)
             return
+
+        if not self.split_in_current_dimension_is_sensible(arr):
+            self.dimensions_tried.append(self.dimension)
+            self.set_dimension(self.next_dimension())
+            return self.insert(arr, max_leaf_size)
 
         if self.left is None and self.right is None:
             values = arr[:, self.dimension]

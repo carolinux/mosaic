@@ -111,9 +111,12 @@ def divide_into_parts(img, numXtiles, numYtiles):
     width_y = int(math.ceil(img.shape[1]*1.0/numYtiles))
     return divide_into_tiles(img,(width_x, width_y))
 
-def expand(parts, iteration=1, squares_only = False):
+def expand(parts, iteration=1, squares_only = False, do_merging_factor=0.5):
     """Expand parts to join with their neighbours if
-    they are similar color"""
+    they are similar color
+    Args
+        do_merging_factor: the higher the more likely that neighbouring tiles with same color will be merged
+    """
     inactive = 0
     for i in range(len(parts)):
         if i%50==0:
@@ -124,7 +127,7 @@ def expand(parts, iteration=1, squares_only = False):
                 inactive+=1
                 continue
             # if >0.2, means that is is more likely the merging will be skipped
-            if  random.random()> 0.5: #stable thingey: 0.5
+            if  random.random()> do_merging_factor: #stable thingey: 0.5
                 continue
 
             part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)

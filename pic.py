@@ -128,7 +128,7 @@ def add_suffix(fn, suffix):
     b, ext = os.path.splitext(fn)
     return b + suffix + ext
 
-def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True, merging_iterations=4):
+def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True, merging_iterations=4, merging_factor=0.5):
 
     print "start"
     main_pic = io.imread(main_fn)
@@ -145,12 +145,13 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show
     print "Divided"
     for i in range(merging_iterations):
         print "Merging iteration {}".format(i+1)
-        expand(parts, iteration=i+1, squares_only=True)
+        expand(parts, iteration=i+1, squares_only=True, do_merging_factor=merging_factor)
 
     parts = compare(tree, parts, parallelization=parallelism)
     new_pic = assemble_from_parts(parts, border=False, text=False)
 
-    out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}".format(target_width, tiles, datetime.now().microsecond))
+    out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}_mf{}_miter{}".format(
+        target_width, tiles, merging_factor, merging_iterations, datetime.now().microsecond))
     print out_fn
     io.imsave(out_fn, new_pic)
     if show:
@@ -166,6 +167,9 @@ if __name__=="__main__":
     parser.add_argument("-t", "--tiles", type=int, default=150)
     parser.add_argument("-w", "--width", type=int, default=2000)
     parser.add_argument("--no-show", action='store_true', default=False, help="Don't show the generated picture at the end")
+    # best to keep the defaults here
+    parser.add_argument("--merging-factor", type=float, default=0.5)
+    parser.add_argument("--merging-iterations", type=int, default=4)
     args = parser.parse_args()
 
     main_pic = args.pic
@@ -174,4 +178,7 @@ if __name__=="__main__":
     tiles = args.tiles
     target_width = args.width
     tree = pickle.load(open(tree_fn,'rb'))
-    comparisons(main_pic, tree, tiles=tiles, target_width=target_width, parallelism=parallelism, show=not args.no_show)
+    comparisons(main_pic, tree, tiles=tiles, target_width=target_width,
+                parallelism=parallelism, show=not args.no_show,
+                merging_iterations=args.merging_iterations,
+                merging_factor=args.merging_factor)
