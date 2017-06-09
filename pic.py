@@ -15,6 +15,15 @@ import numpy as np
 
 from util import *
 
+import __builtin__
+
+try:
+    __builtin__.profile
+except AttributeError:
+    # No line profiler, provide a pass-through version
+    def profile(func): return func
+    __builtin__.profile = profile
+
 
 def read(fn):
     #print fn
@@ -60,7 +69,7 @@ def get_max_size(sizes):
 
     return argmax
 
-
+@profile
 def process_parts(args):
     try:
         parts = args[0]
@@ -102,7 +111,7 @@ def process_parts(args):
     except Exception,e:
         import traceback
         raise Exception("{}:{}".format(e, traceback.format_exc()))
-
+@profile
 def process_part(parts, tree, part_to_fn, i,j, deltas=None):
     if not parts[i][j].active:
         return None
@@ -132,7 +141,7 @@ def add_suffix(fn, suffix):
     b, ext = os.path.splitext(fn)
     return b + suffix + ext
 
-
+@profile
 def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True, merging_iterations=4, merging_factor=0.5):
 
     print "start"

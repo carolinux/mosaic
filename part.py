@@ -14,6 +14,15 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import graph_util as gu
 
+import __builtin__
+
+try:
+    __builtin__.profile
+except AttributeError:
+    # No line profiler, provide a pass-through version
+    def profile(func): return func
+    __builtin__.profile = profile
+
 class ImagePart(object):
     """A class that represents part of an image"""
 
@@ -83,9 +92,7 @@ class ImagePart(object):
             origin = self.ll
         return tuple(self.matrix[x-origin[0]][y-origin[1]])
 
-    def get_average_color(self, fast=False):
-        #if fast:
-            #return gu.get_average_color_lab(self.matrix, True, fast=True)
+    def get_average_color(self):
         if self.average is None:
             self.average = gu.get_average_color_lab(self.matrix)
         return self.average
@@ -95,15 +102,15 @@ class ImagePart(object):
         and very similar colour"""
         try:
             if self.matrix.shape != other.matrix.shape:
-
                 return False
             #import ipdb; ipdb.set_trace()
-            res =  gu.colors_are_similar(self.get_average_color(fast=True), other.get_average_color(fast=True), threshold=5)
+            res =  gu.colors_are_similar(self.get_average_color(), other.get_average_color(), threshold=5)
             return res
         except Exception,e:
             import ipdb; ipdb.set_trace()
             print e
 
+    @profile
     def expand(self, all_parts, i, j, iteration, squares_only):
         if squares_only:
             neighbours = [(i,j+iteration),(i+iteration,j),(i+iteration,j+iteration)]
