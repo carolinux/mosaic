@@ -159,12 +159,13 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show
     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("pic")
-    parser.add_argument("tree")
-    parser.add_argument("-p", "--parallelism", type=int, default=1)
+    parser.add_argument("pic", help="Picture you want to mosaicify")
+    parser.add_argument("tree", help="Path to the pickle file of the color index")
+    parser.add_argument("-p", "--parallelism", type=int, default=1, help="Set parallelism. Not very robust")
+    # also the bottleneck is not the computing power but the disk I/O, so the speedup is not much
     parser.add_argument("-t", "--tiles", type=int, default=150)
     parser.add_argument("-w", "--width", type=int, default=2000)
-    parser.add_argument("--no-show", type=bool, action='store_true')
+    parser.add_argument("--no-show", action='store_true', default=False, help="Don't show the generated picture at the end")
     args = parser.parse_args()
 
     main_pic = args.pic

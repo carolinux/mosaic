@@ -14,8 +14,8 @@ def build_from_directories(directory_list, tag, leaf_size):
     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("dirs")
-    parser.add_argument("tag")
+    parser.add_argument("dirs", help="Comma separated list of directories of tiles to use")
+    parser.add_argument("tag", help="A name for your color index. tag.pickle will be generated with the index object")
     parser.add_argument("-l", "--leaf-size", type=int, default=10)
 
     args = parser.parse_args()

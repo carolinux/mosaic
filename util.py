@@ -56,24 +56,15 @@ def create_index_from_pictures(fns, pickle_file, leaf_size_hint=5):
     for i,fn in enumerate(fns):
         if fn in avg.keys():
             continue
-        img = img_as_ubyte(io.imread(fn))
-
         if i%50 ==0:
             print "Calculated average of {} pictures out of {}".format(i, len(fns))
         try:
+            img = img_as_ubyte(io.imread(fn))
             avg[fn] = gu.get_average_color_lab(img)
         except Exception,e:
-            print "weird file {}: {}".format(fn,e)
+            print "weird file {}: {} - skipped from index".format(fn,e)
             continue
-    # cleanup the data structure
-    for fn in avg.keys():
-        if not os.path.exists(fn) or "ungood" in fn or "experiment" in fn or os.path.dirname(fn)==".":
-            del avg[fn]
-    dirs = set()
-    for fn in avg.keys():
-        dirs.add(os.path.dirname(fn))
-    #print dirs
-    #pickle.dump(avg, open("avg.pickle","wb"))
+
     print "Building tree nao"
     bounds = [[0,100],[-128,128],[-128,128]] # TODO What iz bounds of lab color space?
     index = KDTree(bounds, leaf_size_hint)
@@ -133,7 +124,7 @@ def expand(parts, iteration=1, squares_only = False):
                 inactive+=1
                 continue
             # if >0.2, means that is is more likely the merging will be skipped
-            if  random.random()> 0.5:
+            if  random.random()> 0.5: #stable thingey: 0.5
                 continue
 
             part.expand(parts, i, j, iteration=iteration,squares_only=squares_only)

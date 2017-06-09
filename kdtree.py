@@ -81,18 +81,18 @@ class Node:
         self.keys = arr[:,0:-1]
         self.content = arr[:,-1]
 
+
     def insert(self, arr, max_leaf_size):
         if len(arr) == 0:
             return
 
-        if len(arr) <= max_leaf_size: # just insert them there
+        # FIXME: depth test is just a hacky fix
+        if len(arr) <= max_leaf_size or self.depth>100: # just insert them there
             self.insertContent(arr)
             return
 
         if self.left is None and self.right is None:
-            # determine optimal split given teh input
-            #import ipdb; ipdb.set_trace()
-            values = arr[:,self.dimension]
+            values = arr[:, self.dimension]
             #TODO: type problems here
             values = map(float,values)
             #TODO: random sample bigger than 1...
@@ -101,7 +101,7 @@ class Node:
             #TODO: What happens if everyone has the same value? Then everybody goes to the right leaf, which is stupid
             lbounds = copy.deepcopy(self.bounds)
             rbounds = copy.deepcopy(self.bounds)
-            lbounds[self.dimension][1] = self.median 
+            lbounds[self.dimension][1] = self.median
             rbounds[self.dimension][0] = self.median 
             self.left = Node(lbounds,self.next_dimension(),self.depth+1,None,None)
             self.right = Node(rbounds,self.next_dimension(),self.depth+1,None,None)
@@ -141,7 +141,7 @@ class KDTree:
 
     def bulk_insert_dict_value_to_spatial(self, d):
         """We have a dictionary from value to spatial iterable.
-        Convert into a numpy array of spatialx, spatialy, ..., value and insert"""
+        Convert into a numpy array of [spatialx, spatialy, spatialz, value] and insert"""
         #import ipdb; ipdb.set_trace()
         arr = np.empty((len(d),self.dim+1), dtype='object')
         for i,(k,v) in enumerate(d.iteritems()):
