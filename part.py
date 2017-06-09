@@ -142,9 +142,8 @@ class ImagePart(object):
         pass
 
     #@profile
-    def fillWithImage(self, image):
-        if len(image) != self.h or len(image[0])!=self.w:
-            image = resize(image, (self.w,self.h),mode='nearest')
+    def fillWithImage(self, image_cache):
+        image = image_cache[(self.h, self.w)]
         if image.dtype!=self.dtype:
             image = img_as_ubyte(image)
         self.matrix = copy.deepcopy(image)

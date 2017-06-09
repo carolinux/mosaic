@@ -60,6 +60,7 @@ def get_max_size(sizes):
 
     return argmax
 
+
 def process_parts(args):
     try:
         parts = args[0]
@@ -81,13 +82,16 @@ def process_parts(args):
                     previously_used_fn = fn
                     sizes.add(parts[i][j].size())
         print ("All sizes of tiles seen: {}".format(sizes))
-        (w, h) = get_max_size(sizes)
+
         pic_matrix_cache = {}
 
         for i,fn in enumerate(set(part_to_fn.values())):
             if i % 100 ==0:
                 print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            pic_matrix_cache[fn] = resize(read(fn), (h,w), mode='nearest')
+            img_data = read(fn)
+            pic_matrix_cache[fn] = {}
+            for (w,h) in sizes:
+                pic_matrix_cache[fn][(h,w)] = resize(img_data, (h,w), mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i % 2000==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
@@ -97,7 +101,7 @@ def process_parts(args):
 
     except Exception,e:
         import traceback
-        raise Exception("{}:{}, {}, {}".format(e, traceback.format_exc(), parts[0], len(parts[0])))
+        raise Exception("{}:{}".format(e, traceback.format_exc()))
 
 def process_part(parts, tree, part_to_fn, i,j, deltas=None):
     if not parts[i][j].active:
@@ -127,6 +131,7 @@ def process_part(parts, tree, part_to_fn, i,j, deltas=None):
 def add_suffix(fn, suffix):
     b, ext = os.path.splitext(fn)
     return b + suffix + ext
+
 
 def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True, merging_iterations=4, merging_factor=0.5):
 
@@ -169,7 +174,7 @@ if __name__=="__main__":
     parser.add_argument("--no-show", action='store_true', default=False, help="Don't show the generated picture at the end")
     # best to keep the defaults here
     parser.add_argument("--merging-factor", type=float, default=0.5)
-    parser.add_argument("--merging-iterations", type=int, default=4)
+    parser.add_argument("--merging-iterations", type=int, default=3)
     args = parser.parse_args()
 
     main_pic = args.pic

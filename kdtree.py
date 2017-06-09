@@ -97,6 +97,8 @@ class Node:
 
         # FIXME: depth check is hacky, split_in_current_dimension_is_sensible is the way to do this properly
         if len(arr) <= max_leaf_size or len(self.dimensions_tried) == self.dimensions or self.depth>100:
+            if self.depth>100:
+                print("High depth reached somehow")
             # just insert them there
             self.insertContent(arr)
             return
