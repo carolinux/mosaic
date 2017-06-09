@@ -97,14 +97,14 @@ def process_parts(args):
         for i,fn in enumerate(set(part_to_fn.values())):
             if i % 100 ==0:
                 print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            img_data = read(fn)
+            #img_data = read(fn)
             pic_matrix_cache[fn] = {}
             for (h,w) in sizes:
-                pic_matrix_cache[fn][(h,w)] = resize(img_data, (h, w), mode='nearest')
+                pic_matrix_cache[fn][(h,w)] = None #resize(img_data, (h, w), mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i % 2000==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
-            parts[k[0]][k[1]].fillWithImage(pic_matrix_cache[v])
+            parts[k[0]][k[1]].fillWithImage(pic_matrix_cache, v)
 
         return parts
 
@@ -142,7 +142,8 @@ def add_suffix(fn, suffix):
     return b + suffix + ext
 
 @profile
-def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True, merging_iterations=4, merging_factor=0.5):
+def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show=True,
+                merging_iterations=4, merging_factor=0.5, export_html=False):
 
     print "start"
     main_pic = io.imread(main_fn)
@@ -166,13 +167,20 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show
         expand(parts, iteration=i+1, squares_only=True, do_merging_factor=merging_factor)
 
     parts = compare(tree, parts, parallelization=parallelism)
-    new_pic = assemble_from_parts(parts, border=False, text=False)
+    pickle.dump(parts, open("parts.pickle",'wb'))
+    new_pic = assemble_from_parts(parts, border=export_html, text=False)
 
     io.imsave(out_fn, new_pic)
     print out_fn, out_fn_base
     if show:
         from PIL import Image
         Image.open(out_fn).show()
+    if export_html:
+        html_out = add_suffix(out_fn,"_html")+".html"
+        import build_index_for_category
+        build_index_for_category.build_html_page_from_parts(
+            parts, 'category_mapping.csv', out_fn, html_out)
+        print html_out
     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -183,6 +191,7 @@ if __name__=="__main__":
     parser.add_argument("-t", "--tiles", type=int, default=150)
     parser.add_argument("-w", "--width", type=int, default=2000)
     parser.add_argument("--no-show", action='store_true', default=False, help="Don't show the generated picture at the end")
+    parser.add_argument("--export-html", action='store_true', default=False, help="Export as html")
     # best to keep the defaults here
     parser.add_argument("--merging-factor", type=float, default=0.5)
     parser.add_argument("--merging-iterations", type=int, default=3)
@@ -197,4 +206,4 @@ if __name__=="__main__":
     comparisons(main_pic, tree, tiles=tiles, target_width=target_width,
                 parallelism=parallelism, show=not args.no_show,
                 merging_iterations=args.merging_iterations,
-                merging_factor=args.merging_factor)
+                merging_factor=args.merging_factor, export_html=args.export_html)
