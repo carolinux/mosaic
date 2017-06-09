@@ -62,10 +62,10 @@ def find_nearest_active_vertical_neighbour_fn(part_to_fn, i, j):
 def get_max_size(sizes):
     argmax = None
     maxsize = 1
-    for w,h in sizes:
+    for h,w in sizes:
         if w * h>maxsize:
             maxsize = w*h
-            argmax = (w, h)
+            argmax = (h, w)
 
     return argmax
 
@@ -99,8 +99,8 @@ def process_parts(args):
                 print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
             img_data = read(fn)
             pic_matrix_cache[fn] = {}
-            for (w,h) in sizes:
-                pic_matrix_cache[fn][(h,w)] = resize(img_data, (h,w), mode='nearest')
+            for (h,w) in sizes:
+                pic_matrix_cache[fn][(h,w)] = resize(img_data, (h, w), mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i % 2000==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
@@ -152,6 +152,10 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show
     print "resizing to {}".format((size,y))
     main_pic = resize(main_pic, (size,y))
     print "resized"
+    out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}_mf{}_miter{}".format(
+        target_width, tiles, merging_factor, merging_iterations, datetime.now().microsecond))
+    out_fn_base = add_suffix(out_fn, "_base")
+    io.imsave(out_fn_base, main_pic)
 
 
     print "Dividing into parts"
@@ -164,10 +168,8 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show
     parts = compare(tree, parts, parallelization=parallelism)
     new_pic = assemble_from_parts(parts, border=False, text=False)
 
-    out_fn = add_suffix(main_fn, "_mosaic_{}_tiles_{}_{}_mf{}_miter{}".format(
-        target_width, tiles, merging_factor, merging_iterations, datetime.now().microsecond))
-    print out_fn
     io.imsave(out_fn, new_pic)
+    print out_fn, out_fn_base
     if show:
         from PIL import Image
         Image.open(out_fn).show()

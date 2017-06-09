@@ -152,7 +152,7 @@ def assemble_from_parts(parts, border=False, text=False, bordercolor=(0,0,0)):
         origin = part.get_origin()
         try:
             img[origin[0]:origin[0]+part.w,origin[1]:origin[1]+part.h] = part.get_matrix()
-        except:
+        except Exception as e:
             import ipdb; ipdb.set_trace()
             print e
     return img

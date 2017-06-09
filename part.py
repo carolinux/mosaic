@@ -150,7 +150,7 @@ class ImagePart(object):
 
     #@profile
     def fillWithImage(self, image_cache):
-        image = image_cache[(self.h, self.w)]
+        image = image_cache[(self.w, self.h)] # something is off here
         if image.dtype!=self.dtype:
             image = img_as_ubyte(image)
         self.matrix = copy.deepcopy(image)
