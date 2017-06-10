@@ -97,10 +97,10 @@ def process_parts(args):
         for i,fn in enumerate(set(part_to_fn.values())):
             if i % 100 ==0:
                 print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            #img_data = read(fn)
+            img_data = read(fn)
             pic_matrix_cache[fn] = {}
             for (h,w) in sizes:
-                pic_matrix_cache[fn][(h,w)] = None #resize(img_data, (h, w), mode='nearest')
+                pic_matrix_cache[fn][(h,w)] = resize(img_data, (h, w), mode='nearest')
         for i, (k,v) in enumerate(part_to_fn.iteritems()):
             if i % 2000==0:
                 print "loaded {} image parts from {}".format(i, len(parts)*len(parts[0]))
@@ -168,7 +168,7 @@ def comparisons(main_fn, tree, tiles=150, target_width=2000, parallelism=1, show
 
     parts = compare(tree, parts, parallelization=parallelism)
     pickle.dump(parts, open("parts.pickle",'wb'))
-    new_pic = assemble_from_parts(parts, border=export_html, text=False)
+    new_pic = assemble_from_parts(parts, border=False, text=False)
 
     io.imsave(out_fn, new_pic)
     print out_fn, out_fn_base
