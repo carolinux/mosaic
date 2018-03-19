@@ -97,7 +97,10 @@ def process_parts(args):
         for i,fn in enumerate(set(part_to_fn.values())):
             if i % 100 ==0:
                 print "reading file {} out of {}".format(i, len(set(part_to_fn.values())))
-            img_data = read(fn)
+            try:
+                img_data = read(fn)
+            except:
+                continue
             pic_matrix_cache[fn] = {}
             for (h,w) in sizes:
                 pic_matrix_cache[fn][(h,w)] = resize(img_data, (h, w), mode='nearest')
@@ -111,6 +114,9 @@ def process_parts(args):
     except Exception,e:
         import traceback
         raise Exception("{}:{}".format(e, traceback.format_exc()))
+
+blacklist = ['312350b02bb0dc06c1afec622989ec93.400x400.jpg']
+
 @profile
 def process_part(parts, tree, part_to_fn, i,j, deltas=None):
     if not parts[i][j].active:
@@ -129,8 +135,16 @@ def process_part(parts, tree, part_to_fn, i,j, deltas=None):
                 #print "delta= {}".format(gu.delta(c,k))
         if fns is not None:
             fn = np.random.choice(fns)
-            part_to_fn[(i,j)] = fn
-            return fn
+            is_blacklisted = False
+            for blacklisted_fn in blacklist:
+                if fn.endswith(blacklisted_fn):
+                    is_blacklisted=True
+                    continue
+            if not is_blacklisted:
+                part_to_fn[(i,j)] = fn
+                return fn
+            else:
+                continue
             #print "found tile for part {},{}".format(i,j)
         else:
             #print "not found tile for part {},{}".format(i,j)
